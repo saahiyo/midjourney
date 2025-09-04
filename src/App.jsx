@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from 'react-router-dom'
 import { supabase } from './lib/supabaseClient'
 import './index.css'
@@ -23,6 +23,8 @@ const App = () => {
   const promptRef = useRef(null);
 
   const abortRef = useRef(null);
+  const generationStartRef = useRef(null);
+  const [generationElapsed, setGenerationElapsed] = useState(null);
   // dedupe identical image URLs (and normalize objects) so we don't render repeated cards
   const displayImages = Array.isArray(images)
     ? Array.from(
@@ -48,6 +50,22 @@ const App = () => {
     'sci-fi cityscape, neon lights, rainy night, ultra-detailed',
   ];
 
+  function formatMs(ms) {
+    if (ms == null) return "—";
+    if (ms < 1000) return `${ms} ms`;
+    return `${(ms / 1000).toFixed(1)} s`;
+  }
+
+  useEffect(() => {
+    if (!loading || !generationStartRef.current) return;
+    // update elapsed frequently while loading
+    setGenerationElapsed(Date.now() - generationStartRef.current);
+    const id = setInterval(() => {
+      setGenerationElapsed(Date.now() - generationStartRef.current);
+    }, 250);
+    return () => clearInterval(id);
+  }, [loading]);
+
   async function handleGenerate(overridePrompt) {
     // if called from an onClick handler React will pass the event as the first arg.
     // only treat overridePrompt as an override when it's a string; otherwise use the `prompt` state.
@@ -58,10 +76,11 @@ const App = () => {
       return;
     }
 
-    setLoading(true);
+  setLoading(true);
     setImages([]);
     setProgress(5);
     setError(null);
+  generationStartRef.current = Date.now();
 
     const base = import.meta.env.VITE_MJ_API_URL ;
     const q = new URLSearchParams({
@@ -86,6 +105,7 @@ const App = () => {
       if (data.status === "completed" && Array.isArray(data.results)) {
         setImages(data.results);
         setProgress(100);
+        generationStartRef.current && setGenerationElapsed(Date.now() - generationStartRef.current);
         // save generation to supabase (best-effort)
         try {
           await saveGeneration(usedPrompt, aspectRatio, data.results)
@@ -126,6 +146,7 @@ const App = () => {
         ) {
           setImages(j.results);
           setProgress(100);
+          generationStartRef.current && setGenerationElapsed(Date.now() - generationStartRef.current);
           try {
             await saveGeneration(usedPrompt, aspectRatio, j.results)
           } catch (e) {
@@ -210,6 +231,7 @@ const App = () => {
     setError(null);
     setProgress(0);
     setLoading(false);
+  setGenerationElapsed(null);
   }
 
   return (
@@ -283,14 +305,17 @@ const App = () => {
             </div>
           )}
           {displayImages.length > 0 && (
-            <div className="mt-2 bg-neutral-800 p-3 rounded-md">
-              <p className="text-sm text-neutral-200 truncate">
-                <strong>Prompt:</strong> {prompt}
-              </p>
-              <p className="text-xs text-neutral-400 mt-1">
-                Aspect Ratio: {aspectRatio}
-              </p>
-            </div>
+                <div className=" mb-2 border-t border-neutral-800 py-2">
+                  <p className="text-sm text-neutral-200 truncate">
+                    <strong>Prompt:</strong> {prompt}
+                  </p>
+                  <div className="flex items-center gap-4 mt-1">
+                    <p className="text-xs text-neutral-400"><i class="ri-layout-fill"></i> Aspect Ratio: {aspectRatio}</p>
+                    {generationElapsed != null && (
+                      <p className="text-xs text-neutral-400"><i class="ri-timer-line"></i> Elapsed: {formatMs(generationElapsed)}</p>
+                    )}
+                  </div>
+                </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 flex-1 min-h-0">
             {displayImages.length === 0 ? (
@@ -310,6 +335,10 @@ const App = () => {
                       >
                         {progress}%
                       </div>
+                    </div>
+                    <div className="mt-3 text-center text-sm text-neutral-400">
+                      <div>Elapsed: {formatMs(generationElapsed)}</div>
+                      <div className="text-xs text-neutral-500 mt-1">Image will be generated soon — this may take a few moments.</div>
                     </div>
                   </div>
                 ) : error ? (
