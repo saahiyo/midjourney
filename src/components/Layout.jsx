@@ -27,8 +27,8 @@ export default function Layout() {
             </button>
           </div>
         </div>
-        <p className="text-sm md:text-base text-neutral-400 mt-2 tracking-tight text-center sm:text-left">
-          Generate stunning images with a sleek and modern interface.
+        <p className="text-sm md:text-base text-neutral-400 mt-2 tracking-tighter">
+          Generate stunning <span className="text-emerald-500/70 font-semibold">images</span> with a sleek and modern interface.
         </p>
       </header>
 

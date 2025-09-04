@@ -61,14 +61,14 @@ const GenerationCard = ({ generation, onDelete, onPreview }) => {
   };
 
   return (
-    <div className="bg-neutral-800 p-4 rounded-xl shadow-md transition-all duration-200 hover:shadow-emerald-900/50 hover:-translate-y-1 flex flex-col gap-3 border border-transparent hover:border-emerald-700/50">
+    <div className="bg-neutral-800 p-2 rounded-xl shadow-md transition-all duration-200 hover:shadow-emerald-000/50 hover:-translate-y-1 flex flex-col gap-3 border border-transparent hover:border-emerald-700/50">
       <div className="grid grid-cols-2 gap-2 flex-grow">
         {(generation.images || []).slice(0, 4).map((src, i) => (
           <div key={i} className="aspect-square">
             <img
               src={src}
               alt={`Generation ${generation.id} - Image ${i + 1}`}
-              className="w-full h-full object-cover rounded-lg cursor-pointer border-2 border-neutral-900 hover:border-emerald-500 transition-all duration-200 hover:scale-105"
+              className="w-full h-full object-cover rounded-lg cursor-pointer border-1 border-neutral-900 hover:border-emerald-500 transition-all duration-200 hover:scale-105"
               onClick={() => onPreview(generation, src)}
               loading="lazy"
             />
@@ -82,6 +82,7 @@ const GenerationCard = ({ generation, onDelete, onPreview }) => {
           className="flex-1 px-3 py-1.5 rounded bg-neutral-900 text-xs text-neutral-300 hover:bg-emerald-700 hover:text-white transition-colors duration-200"
           aria-label="Copy link to generation"
         >
+          <i class="ri-file-copy-line mr-2"></i>
           Copy Link
         </button>
         <button
@@ -89,7 +90,9 @@ const GenerationCard = ({ generation, onDelete, onPreview }) => {
           disabled={isDeleting}
           className="px-3 py-1.5 rounded bg-red-900 text-xs text-red-300 hover:bg-red-700 hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Delete generation"
+          title={isDeleting ? "Deleting..." : "Delete image group"}
         >
+          <i class="ri-delete-bin-line mr-2"></i>
           {isDeleting ? "..." : "Delete"}
         </button>
       </div>
@@ -149,7 +152,7 @@ const ImagePreview = ({ generation, src, onClose }) => {
           <p className="font-mono text-sm text-white mb-2">{generation.prompt}</p>
           <div className="flex justify-between text-xs text-neutral-400">
             <span>{formatDate} at {formatTime}</span>
-            <span>--ar {generation.aspect_ratio}</span>
+            <span>{generation.aspect_ratio}</span>
           </div>
         </div>
       </div>
@@ -235,7 +238,7 @@ export default function Generations() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6 border-b border-neutral-800 pb-4">
           <div>
-            <h1 className="text-2xl font-bold mb-1">Saved Generations</h1>
+            <h1 className="text-xl mb-1 text-neutral-400">Saved Generations</h1>
             {savedGenerations.length > 0 && (
               <p className="text-sm text-neutral-400">
                 {savedGenerations.length} generation{savedGenerations.length !== 1 ? 's' : ''} total
@@ -244,7 +247,7 @@ export default function Generations() {
           </div>
           <button
             onClick={() => navigate(-1)}
-            className="px-4 py-2 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors duration-200"
+            className="px-4 py-2 text-md text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors duration-200"
           >
             ← Back
           </button>

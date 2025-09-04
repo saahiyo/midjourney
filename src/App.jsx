@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from 'react-router-dom'
-import { supabase } from './lib/supabaseClient'
-import './index.css'
+import { useNavigate } from "react-router-dom";
+import { supabase } from "./lib/supabaseClient";
+import "./index.css";
+import ElapsedTime from "./components/ElapsedTime";
 
 const aspectRatios = [
   { label: "Square (default)", value: "--ar 1:1" },
@@ -12,8 +13,15 @@ const aspectRatios = [
   { label: "Portrait (vertical)", value: "--ar 9:16" },
 ];
 
+const examples = [
+  "cinematic portrait, dramatic rim light, shallow depth of field",
+  "lush fantasy landscape, golden hour, volumetric light",
+  "sci-fi cityscape, neon lights, rainy night, ultra-detailed",
+];
+
 const App = () => {
   const [prompt, setPrompt] = useState("");
+  const [displayPrompt, setdisplayPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [images, setImages] = useState([]);
@@ -24,7 +32,10 @@ const App = () => {
 
   const abortRef = useRef(null);
   const generationStartRef = useRef(null);
-  const [generationElapsed, setGenerationElapsed] = useState(null);
+
+  const [displayAspectr, setDisplayAspectr] = useState(aspectRatios[0].label);
+
+
   // dedupe identical image URLs (and normalize objects) so we don't render repeated cards
   const displayImages = Array.isArray(images)
     ? Array.from(
@@ -34,7 +45,8 @@ const App = () => {
               if (!it) return null;
               if (typeof it === "string") return it;
               // common response shapes: { url } or { src }
-              if (typeof it === "object") return it.url || it.src || JSON.stringify(it);
+              if (typeof it === "object")
+                return it.url || it.src || JSON.stringify(it);
               return String(it);
             })
             .filter(Boolean)
@@ -43,46 +55,27 @@ const App = () => {
     : [];
   // clamp percentage label position so it stays inside the bar
   const pctPos = Math.min(98, Math.max(2, progress));
-  // example prompts to show in empty state
-  const examples = [
-    'cinematic portrait, dramatic rim light, shallow depth of field',
-    'lush fantasy landscape, golden hour, volumetric light',
-    'sci-fi cityscape, neon lights, rainy night, ultra-detailed',
-  ];
-
-  function formatMs(ms) {
-    if (ms == null) return "—";
-    if (ms < 1000) return `${ms} ms`;
-    return `${(ms / 1000).toFixed(1)} s`;
-  }
-
-  useEffect(() => {
-    if (!loading || !generationStartRef.current) return;
-    // update elapsed frequently while loading
-    setGenerationElapsed(Date.now() - generationStartRef.current);
-    const id = setInterval(() => {
-      setGenerationElapsed(Date.now() - generationStartRef.current);
-    }, 250);
-    return () => clearInterval(id);
-  }, [loading]);
 
   async function handleGenerate(overridePrompt) {
     // if called from an onClick handler React will pass the event as the first arg.
     // only treat overridePrompt as an override when it's a string; otherwise use the `prompt` state.
-    const usedPrompt = typeof overridePrompt === 'string' ? overridePrompt : prompt;
+    const usedPrompt =
+      typeof overridePrompt === "string" ? overridePrompt : prompt;
+    setdisplayPrompt(usedPrompt);
+    setDisplayAspectr(aspectRatio);
     setError(null);
     if (!usedPrompt.trim()) {
       setError("Please enter a prompt.");
       return;
     }
 
-  setLoading(true);
+    setLoading(true);
     setImages([]);
     setProgress(5);
     setError(null);
-  generationStartRef.current = Date.now();
+    generationStartRef.current = Date.now();
 
-    const base = import.meta.env.VITE_MJ_API_URL ;
+    const base = import.meta.env.VITE_MJ_API_URL;
     const q = new URLSearchParams({
       prompt: `${usedPrompt.trim()} ${aspectRatio}`,
       usePolling: "true",
@@ -105,12 +98,11 @@ const App = () => {
       if (data.status === "completed" && Array.isArray(data.results)) {
         setImages(data.results);
         setProgress(100);
-        generationStartRef.current && setGenerationElapsed(Date.now() - generationStartRef.current);
         // save generation to supabase (best-effort)
         try {
-          await saveGeneration(usedPrompt, aspectRatio, data.results)
+          await saveGeneration(usedPrompt, aspectRatio, data.results);
         } catch (e) {
-          console.warn('Failed to save generation', e)
+          console.warn("Failed to save generation", e);
         }
         return;
       }
@@ -146,11 +138,10 @@ const App = () => {
         ) {
           setImages(j.results);
           setProgress(100);
-          generationStartRef.current && setGenerationElapsed(Date.now() - generationStartRef.current);
           try {
-            await saveGeneration(usedPrompt, aspectRatio, j.results)
+            await saveGeneration(usedPrompt, aspectRatio, j.results);
           } catch (e) {
-            console.warn('Failed to save generation', e)
+            console.warn("Failed to save generation", e);
           }
           return;
         }
@@ -175,37 +166,45 @@ const App = () => {
     }
   }
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   function viewGenerations() {
     // client-side navigation (no full page reload)
-    try { navigate('/generations') } catch (e) { console.warn(e) }
+    try {
+      navigate("/generations");
+    } catch (e) {
+      console.warn(e);
+    }
   }
-  const [savedGenerations, setSavedGenerations] = useState([])
+  const [savedGenerations, setSavedGenerations] = useState([]);
 
   async function saveGeneration(promptText, aspect, imgs) {
-    if (!supabase) return
+    if (!supabase) return;
     try {
-      const payload = { prompt: promptText, aspect_ratio: aspect, images: imgs }
-      const { error } = await supabase.from('generations').insert([payload])
-      if (error) throw error
+      const payload = {
+        prompt: promptText,
+        aspect_ratio: aspect,
+        images: imgs,
+      };
+      const { error } = await supabase.from("generations").insert([payload]);
+      if (error) throw error;
     } catch (e) {
-      console.warn('supabase insert error', e)
+      console.warn("supabase insert error", e);
     }
   }
 
   async function fetchGenerations() {
-    if (!supabase) return
+    if (!supabase) return;
     try {
       const { data, error } = await supabase
-        .from('generations')
-        .select('id, prompt, aspect_ratio, images, created_at')
-        .order('created_at', { ascending: false })
-        .limit(50)
-      if (error) throw error
-      setSavedGenerations(data || [])
+        .from("generations")
+        .select("id, prompt, aspect_ratio, images, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      setSavedGenerations(data || []);
     } catch (e) {
-      console.warn('supabase fetch error', e)
+      console.warn("supabase fetch error", e);
     }
   }
 
@@ -227,11 +226,9 @@ const App = () => {
   function clearAll() {
     if (abortRef.current) abortRef.current.abort();
     setPrompt("");
-    setImages([]);
     setError(null);
     setProgress(0);
     setLoading(false);
-  setGenerationElapsed(null);
   }
 
   return (
@@ -240,7 +237,7 @@ const App = () => {
         <section className="md:col-span-1 bg-neutral-900 p-4 rounded-lg shadow-lg">
           <div className="flex">
             <i className="ri-arrow-drop-right-fill"></i>
-            <label className="block text-sm text-neutral-300 mb-3 font-medium">
+            <label className="text-sm text-neutral-400 mb-3 font-medium">
               Prompt
             </label>
           </div>
@@ -268,7 +265,8 @@ const App = () => {
           </p>
 
           <div className="mt-6">
-            <label className="text-xs text-neutral-400 font-medium">
+            <i className="ri-arrow-drop-right-fill"></i>
+            <label className="text-neutral-400 text-xs  font-medium">
               Aspect Ratio
             </label>
             <select
@@ -305,17 +303,20 @@ const App = () => {
             </div>
           )}
           {displayImages.length > 0 && (
-                <div className=" mb-2 border-t border-neutral-800 py-2">
-                  <p className="text-sm text-neutral-200 truncate">
-                    <strong>Prompt:</strong> {prompt}
-                  </p>
-                  <div className="flex items-center gap-4 mt-1">
-                    <p className="text-xs text-neutral-400"><i class="ri-layout-fill"></i> Aspect Ratio: {aspectRatio}</p>
-                    {generationElapsed != null && (
-                      <p className="text-xs text-neutral-400"><i class="ri-timer-line"></i> Elapsed: {formatMs(generationElapsed)}</p>
-                    )}
-                  </div>
-                </div>
+            <div className=" mb-2 border-t border-neutral-800 py-2">
+              <p className="text-sm text-neutral-200 truncate">
+                <strong>Prompt:</strong> {displayPrompt}
+              </p>
+              <div className="flex items-center gap-4 mt-1">
+                <p className="text-xs text-neutral-400">
+                  <i class="ri-layout-fill"></i> Aspect Ratio: {displayAspectr}
+                </p>
+                <ElapsedTime
+                  startTime={generationStartRef.current}
+                  loading={loading}
+                />
+              </div>
+            </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 flex-1 min-h-0">
             {displayImages.length === 0 ? (
@@ -337,8 +338,14 @@ const App = () => {
                       </div>
                     </div>
                     <div className="mt-3 text-center text-sm text-neutral-400">
-                      <div>Elapsed: {formatMs(generationElapsed)}</div>
-                      <div className="text-xs text-neutral-500 mt-1">Image will be generated soon — this may take a few moments.</div>
+                      <ElapsedTime
+                        startTime={generationStartRef.current}
+                        loading={loading}
+                      />
+                      <div className="text-xs text-neutral-500 mt-1">
+                        Image will be generated soon — this may take a few
+                        moments.
+                      </div>
                     </div>
                   </div>
                 ) : error ? (
@@ -349,7 +356,9 @@ const App = () => {
                 ) : (
                   <div className="w-full">
                     <div className="mb-3 border-b border-neutral-800 pb-2">
-                      <p className="text-sm font-medium text-neutral-400 text-center">No images to display</p>
+                      <p className="text-sm font-medium text-neutral-400 text-center">
+                        No images to display
+                      </p>
                     </div>
                     <div className="flex flex-wrap gap-2 justify-center mt-8">
                       {examples.map((ex, i) => (
@@ -358,13 +367,18 @@ const App = () => {
                           onClick={() => tryExample(ex)}
                           title={ex}
                           className="text-xs truncate max-w-xs px-2 py-1 rounded-full bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
-                        > <i className="ri-arrow-right-up-long-line mr-2"></i>
+                        >
+                          {" "}
+                          <i className="ri-arrow-right-up-long-line mr-2"></i>
                           {ex}
                         </button>
                       ))}
                     </div>
                     <div className="mt-4 text-xs text-neutral-400 text-center">
-                      Quick tips: try <span className="text-neutral-200">cinematic portrait, dramatic rim light</span>
+                      Quick tips: try{" "}
+                      <span className="text-neutral-200">
+                        cinematic portrait, dramatic rim light
+                      </span>
                     </div>
                   </div>
                 )}
@@ -375,7 +389,10 @@ const App = () => {
                   {/* Large horizontally scrollable gallery of tall thumbnails */}
                   <div className="flex gap-6 overflow-x-auto py-2 -mx-2 px-2 scrollbar-hide">
                     {displayImages.map((src, idx) => (
-                      <div key={`${idx}-${src}`} className="flex-none w-44 sm:w-56 md:w-64">
+                      <div
+                        key={`${idx}-${src}`}
+                        className="flex-none w-44 sm:w-56 md:w-64"
+                      >
                         <button
                           onClick={() => setPreviewSrc(src)}
                           className="block w-full h-72 sm:h-80 md:h-96 bg-black rounded-md overflow-hidden shadow-inner"
@@ -394,8 +411,17 @@ const App = () => {
                   {/* Optional secondary row: thumbnails as a compact strip */}
                   <div className="flex gap-3 overflow-x-auto py-1 -mx-2 px-2">
                     {displayImages.map((src, idx) => (
-                      <button key={`thumb-${idx}-${src}`} onClick={() => setPreviewSrc(src)} className="flex-none w-20 h-28 sm:w-24 sm:h-32 bg-black rounded-md overflow-hidden shadow-sm">
-                        <img src={src} alt={`thumb ${idx}`} className="w-full h-full object-cover" loading="lazy" />
+                      <button
+                        key={`thumb-${idx}-${src}`}
+                        onClick={() => setPreviewSrc(src)}
+                        className="flex-none w-20 h-28 sm:w-24 sm:h-32 bg-black rounded-md overflow-hidden shadow-sm"
+                      >
+                        <img
+                          src={src}
+                          alt={`thumb ${idx}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
                       </button>
                     ))}
                   </div>
@@ -405,17 +431,19 @@ const App = () => {
           </div>
         </section>
       </main>
-  {/* generations are now shown inline; modal removed */}
+      {/* generations are now shown inline; modal removed */}
       {previewSrc && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
           onClick={() => setPreviewSrc(null)}
         >
           <div className="bg-neutral-900 rounded-xl p-3 max-w-[95vw] max-h-[90vh] overflow-auto">
-            <img src={previewSrc} alt="preview" className="max-w-full max-h-[80vh] object-contain rounded-md" />
-            <div className="flex justify-end mt-2">
-              <button onClick={() => setPreviewSrc(null)} className="px-4 py-2 rounded bg-emerald-700 text-white">Close</button>
-            </div>
+            <img
+              src={previewSrc}
+              alt="preview"
+              className="max-w-full max-h-[80vh] object-contain rounded-md"
+            />
+            <div className="flex justify-end mt-2"></div>
           </div>
         </div>
       )}
