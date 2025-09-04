@@ -142,6 +142,15 @@ const App = () => {
     } catch (e) {}
   }
 
+  function clearAll() {
+    if (abortRef.current) abortRef.current.abort();
+    setPrompt("");
+    setImages([]);
+    setError(null);
+    setProgress(0);
+    setLoading(false);
+  }
+
   return (
     <div className="bg-neutral-950 min-h-screen p-8 text-white ">
       <header className="max-w-6xl border-b border-neutral-800 mb-8 mx-auto tracking-wide pb-2">
@@ -164,14 +173,25 @@ const App = () => {
               Prompt
             </label>
           </div>
-          <textarea
-            ref={promptRef}
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe your vision..."
-            rows={6}
-            className="w-full p-2 rounded-lg bg-neutral-800 text-white border border-neutral-700 focus:outline-none focus:ring-1 focus:ring-emerald-800"
-          />
+          <div className="relative">
+            <textarea
+              ref={promptRef}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Describe your vision..."
+              rows={6}
+              className="w-full p-2 rounded-lg bg-neutral-800 text-white border border-neutral-700 focus:outline-none focus:ring-1 focus:ring-emerald-800"
+            />
+            {prompt ? (
+              <button
+                onClick={clearAll}
+                aria-label="Clear prompt"
+                className="absolute right-2 top-2 p-1 text-neutral-400 hover:text-white rounded"
+              >
+                <i className="ri-close-line"></i>
+              </button>
+            ) : null}
+          </div>
           <p className="text-xs text-neutral-400 mt-2 text-right">
             {prompt.length}/500
           </p>
@@ -199,23 +219,8 @@ const App = () => {
               disabled={loading || !prompt.trim()}
               className={`flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-3 rounded-lg shadow-md transition-transform transform hover:scale-102 flex items-center gap-2`}
             >
-              <i class="ri-image-ai-line"></i>
+              <i className="ri-image-ai-line"></i>
               {loading ? "Generating..." : "Generate"}
-            </button>
-
-            <button
-              onClick={() => {
-                if (abortRef.current) abortRef.current.abort();
-                setPrompt("");
-                setImages([]);
-                setError(null);
-                setProgress(0);
-                setLoading(false);
-              }}
-              className="px-4 py-3 rounded-lg bg-neutral-800 border border-neutral-700 text-sm hover:bg-neutral-700 transition flex items-center gap-2 shadow-sm"
-            >
-              <i className="ri-refresh-line"></i>
-              Clear
             </button>
           </div>
         </section>
