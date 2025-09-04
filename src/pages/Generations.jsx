@@ -75,14 +75,14 @@ const GenerationCard = ({ generation, onDelete, onPreview }) => {
           </div>
         ))}
       </div>
-      
+
       <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-neutral-700">
         <button
           onClick={handleCopyLink}
           className="flex-1 px-3 py-1.5 rounded bg-neutral-900 text-xs text-neutral-300 hover:bg-emerald-700 hover:text-white transition-colors duration-200"
           aria-label="Copy link to generation"
         >
-          <i class="ri-file-copy-line mr-2"></i>
+          <i className="ri-file-copy-line mr-2"></i>
           Copy Link
         </button>
         <button
@@ -92,7 +92,7 @@ const GenerationCard = ({ generation, onDelete, onPreview }) => {
           aria-label="Delete generation"
           title={isDeleting ? "Deleting..." : "Delete image group"}
         >
-          <i class="ri-delete-bin-line mr-2"></i>
+          <i className="ri-delete-bin-line mr-2"></i>
           {isDeleting ? "..." : "Delete"}
         </button>
       </div>

@@ -313,8 +313,9 @@ const App = () => {
                 </p>
                 <ElapsedTime
                   startTime={generationStartRef.current}
-                  loading={loading}
-                />
+                  endTime={
+                    !loading && displayImages.length > 0 ? Date.now() : null
+                  }/>
               </div>
             </div>
           )}
