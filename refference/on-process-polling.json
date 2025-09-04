@@ -1,0 +1,6 @@
+{
+  "id": "1756846366230",
+  "status": "processing",
+  "pollingUrl": "https://api.oculux.xyz/api/mj-proxy-pub?id=1756846366230",
+  "note": "Use polling url to check if the image is ready."
+}

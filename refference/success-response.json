@@ -1,0 +1,12 @@
+{
+  "status": "completed",
+  "message": "Boom! Your image is generated with Midjourney prompt:  a man in hoodie  --niji 6 --turbo",
+  "results": [
+    "https://pub-8bf6bceca7d54700970348c6f393b123.r2.dev/96e78496-84c4-4e74-b651-f82499405aa5",
+    "https://pub-8bf6bceca7d54700970348c6f393b123.r2.dev/c725738d-0591-48c8-8e40-c46e21d7af45",
+    "https://pub-8bf6bceca7d54700970348c6f393b123.r2.dev/0b5745bb-e2a5-4c6c-a3ec-3098ffb7d058",
+    "https://pub-8bf6bceca7d54700970348c6f393b123.r2.dev/d7a6456f-c936-400c-8921-c1a9bfd7d226"
+  ],
+  "author": "@renz/zaikyoo",
+  "generated_with": "Mj-proxy-pub"
+}
