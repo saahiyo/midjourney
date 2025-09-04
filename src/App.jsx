@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useNavigate } from 'react-router-dom'
 import { supabase } from './lib/supabaseClient'
 
 const aspectRatios = [
@@ -88,9 +89,9 @@ const App = () => {
         throw new Error("No polling url returned by API");
       }
 
-  const start = Date.now();
-  // increase timeout to 5 minutes for longer-running generations
-  const timeoutMs = 300_000;
+      const start = Date.now();
+      // increase timeout to 5 minutes for longer-running generations
+      const timeoutMs = 300_000;
       let attempts = 0;
       while (Date.now() - start < timeoutMs) {
         if (controller.signal.aborted) throw new Error("Cancelled");
@@ -139,13 +140,12 @@ const App = () => {
     }
   }
 
-  function viewGenerations() {
-    // open modal and load generations
-    setShowModal(true)
-    fetchGenerations()
-  }
+  const navigate = useNavigate()
 
-  const [showModal, setShowModal] = useState(false)
+  function viewGenerations() {
+    // client-side navigation (no full page reload)
+    try { navigate('/generations') } catch (e) { console.warn(e) }
+  }
   const [savedGenerations, setSavedGenerations] = useState([])
 
   async function saveGeneration(promptText, aspect, imgs) {
@@ -200,29 +200,6 @@ const App = () => {
 
   return (
     <div className="bg-neutral-950 min-h-screen p-8 text-white ">
-      <header className="max-w-6xl border-b border-neutral-800 mb-8 mx-auto tracking-wide pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <i className="ri-bard-fill text-2xl md:text-3xl text-emerald-500"></i>
-            <h1 className="md:text-4xl text-3xl text-emerald-500 font-semibold tracking-wider">
-              MidJourney
-            </h1>
-          </div>
-          <div>
-            <button
-              onClick={viewGenerations}
-              className="px-4 py-2 rounded-full bg-emerald-950 text-emerald-100 text-sm shadow-sm border border-emerald-600"
-            >
-              View Generations
-              <i className="ri-arrow-right-line ml-2"></i>
-            </button>
-          </div>
-        </div>
-        <p className="text-sm md:text-base text-neutral-400 mt-2 tracking-tight">
-          Generate stunning images with a sleek and modern interface.
-        </p>
-      </header>
-
       <main className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         <section className="md:col-span-1 bg-neutral-900 p-4 rounded-lg shadow-lg">
           <div className="flex">
@@ -389,35 +366,7 @@ const App = () => {
           </div>
         </section>
       </main>
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="w-full max-w-3xl bg-neutral-900 rounded-lg p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Saved Generations</h3>
-              <div className="flex items-center gap-2">
-                <button onClick={() => { setShowModal(false) }} className="text-sm text-neutral-400 hover:text-white">Close</button>
-              </div>
-            </div>
-            <div className="max-h-96 overflow-auto">
-              {savedGenerations.length === 0 ? (
-                <p className="text-sm text-neutral-400">No saved generations.</p>
-              ) : (
-                savedGenerations.map((g) => (
-                  <div key={g.id} className="border-b border-neutral-800 py-3">
-                    <div className="text-sm text-neutral-200 font-medium">{g.prompt}</div>
-                    <div className="text-xs text-neutral-400">{g.aspect_ratio} • {new Date(g.created_at).toLocaleString()}</div>
-                    <div className="mt-2 grid grid-cols-3 gap-2">
-                      {(g.images || []).slice(0,3).map((src, i) => (
-                        <img key={i} src={src} alt={`gen-${g.id}-${i}`} className="w-full h-20 object-cover rounded" />
-                      ))}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+  {/* generations are now shown inline; modal removed */}
     </div>
   );
 };
