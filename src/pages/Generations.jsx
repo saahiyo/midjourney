@@ -251,7 +251,7 @@ export default function Generations() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white">
-      <main className="max-w-7xl mx-auto p-6">
+      <main className="max-w-6xl mx-auto p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 border-b border-neutral-800 pb-4">
           <div>
