@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { supabase } from './lib/supabaseClient'
 
 const aspectRatios = [
   { label: "Square (default)", value: "--ar 1:1" },
@@ -47,7 +48,7 @@ const App = () => {
     setProgress(5);
     setError(null);
 
-    const base = "https://api.oculux.xyz/api/mj-proxy-pub";
+    const base = import.meta.env.VITE_MJ_API_URL ;
     const q = new URLSearchParams({
       prompt: `${usedPrompt.trim()} ${aspectRatio}`,
       usePolling: "true",
@@ -70,6 +71,12 @@ const App = () => {
       if (data.status === "completed" && Array.isArray(data.results)) {
         setImages(data.results);
         setProgress(100);
+        // save generation to supabase (best-effort)
+        try {
+          await saveGeneration(usedPrompt, aspectRatio, data.results)
+        } catch (e) {
+          console.warn('Failed to save generation', e)
+        }
         return;
       }
 
@@ -104,6 +111,11 @@ const App = () => {
         ) {
           setImages(j.results);
           setProgress(100);
+          try {
+            await saveGeneration(usedPrompt, aspectRatio, j.results)
+          } catch (e) {
+            console.warn('Failed to save generation', e)
+          }
           return;
         }
 
@@ -128,8 +140,38 @@ const App = () => {
   }
 
   function viewGenerations() {
-    // placeholder: open history or navigate to a generations view
-    console.log('View Generations clicked')
+    // open modal and load generations
+    setShowModal(true)
+    fetchGenerations()
+  }
+
+  const [showModal, setShowModal] = useState(false)
+  const [savedGenerations, setSavedGenerations] = useState([])
+
+  async function saveGeneration(promptText, aspect, imgs) {
+    if (!supabase) return
+    try {
+      const payload = { prompt: promptText, aspect_ratio: aspect, images: imgs }
+      const { error } = await supabase.from('generations').insert([payload])
+      if (error) throw error
+    } catch (e) {
+      console.warn('supabase insert error', e)
+    }
+  }
+
+  async function fetchGenerations() {
+    if (!supabase) return
+    try {
+      const { data, error } = await supabase
+        .from('generations')
+        .select('id, prompt, aspect_ratio, images, created_at')
+        .order('created_at', { ascending: false })
+        .limit(50)
+      if (error) throw error
+      setSavedGenerations(data || [])
+    } catch (e) {
+      console.warn('supabase fetch error', e)
+    }
   }
 
   function handleDownload(dataUrl, idx) {
@@ -172,7 +214,7 @@ const App = () => {
               className="px-4 py-2 rounded-full bg-emerald-950 text-emerald-100 text-sm shadow-sm border border-emerald-600"
             >
               View Generations
-              <i class="ri-arrow-right-line ml-2"></i>
+              <i className="ri-arrow-right-line ml-2"></i>
             </button>
           </div>
         </div>
@@ -184,7 +226,7 @@ const App = () => {
       <main className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         <section className="md:col-span-1 bg-neutral-900 p-4 rounded-lg shadow-lg">
           <div className="flex">
-            <i class="ri-arrow-drop-right-fill"></i>
+            <i className="ri-arrow-drop-right-fill"></i>
             <label className="block text-sm text-neutral-300 mb-3 font-medium">
               Prompt
             </label>
@@ -281,7 +323,7 @@ const App = () => {
                   </div>
                 ) : error ? (
                   <div className="w-full flex flex-col items-center gap-2">
-                    <i class="ri-error-warning-line text-red-400 text-3xl"></i>
+                    <i className="ri-error-warning-line text-red-400 text-3xl"></i>
                     <p className="text-sm text-red-400 text-center">{error}</p>
                   </div>
                 ) : (
@@ -296,7 +338,7 @@ const App = () => {
                           onClick={() => tryExample(ex)}
                           title={ex}
                           className="text-xs truncate max-w-xs px-2 py-1 rounded-full bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
-                        > <i class="ri-arrow-right-up-long-line mr-2"></i>
+                        > <i className="ri-arrow-right-up-long-line mr-2"></i>
                           {ex}
                         </button>
                       ))}
@@ -347,6 +389,35 @@ const App = () => {
           </div>
         </section>
       </main>
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="w-full max-w-3xl bg-neutral-900 rounded-lg p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Saved Generations</h3>
+              <div className="flex items-center gap-2">
+                <button onClick={() => { setShowModal(false) }} className="text-sm text-neutral-400 hover:text-white">Close</button>
+              </div>
+            </div>
+            <div className="max-h-96 overflow-auto">
+              {savedGenerations.length === 0 ? (
+                <p className="text-sm text-neutral-400">No saved generations.</p>
+              ) : (
+                savedGenerations.map((g) => (
+                  <div key={g.id} className="border-b border-neutral-800 py-3">
+                    <div className="text-sm text-neutral-200 font-medium">{g.prompt}</div>
+                    <div className="text-xs text-neutral-400">{g.aspect_ratio} • {new Date(g.created_at).toLocaleString()}</div>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      {(g.images || []).slice(0,3).map((src, i) => (
+                        <img key={i} src={src} alt={`gen-${g.id}-${i}`} className="w-full h-20 object-cover rounded" />
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

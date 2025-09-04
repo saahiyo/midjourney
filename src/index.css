@@ -1,1 +1,48 @@
 @import "tailwindcss";
+
+/* Custom scrollbar - global, cross-browser */
+:root {
+	--scrollbar-bg: rgba(0,0,0,0.06);
+	--scrollbar-thumb: rgba(0,0,0,0.35);
+	--scrollbar-thumb-hover: rgba(0,0,0,0.5);
+	--scrollbar-width: 12px;
+}
+
+/* Firefox */
+* {
+	scrollbar-width: thin; /* auto | thin | none */
+	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+*::-webkit-scrollbar {
+	width: var(--scrollbar-width);
+	height: var(--scrollbar-width);
+}
+*::-webkit-scrollbar-track {
+	background-color: var(--scrollbar-bg);
+	border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb {
+	background-color: var(--scrollbar-thumb);
+	border-radius: 999px;
+	border: 3px solid transparent; /* space around thumb */
+	background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+	background-color: var(--scrollbar-thumb-hover);
+}
+
+/* Utility to hide scrollbar while keeping scrolling (if needed) */
+.no-scrollbar {
+	-ms-overflow-style: none; /* IE and Edge */
+	scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+	display: none; /* Chrome, Safari, Opera */
+}
+
+/* Small tweak for reduced motion / small screens */
+@media (max-width: 640px) {
+	:root { --scrollbar-width: 8px; }
+}
