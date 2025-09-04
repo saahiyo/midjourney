@@ -17,14 +17,27 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [images, setImages] = useState([]);
+  const [previewSrc, setPreviewSrc] = useState(null);
   const [error, setError] = useState(null);
   const [aspectRatio, setAspectRatio] = useState(aspectRatios[0].value);
   const promptRef = useRef(null);
 
   const abortRef = useRef(null);
-  // dedupe identical image URLs so we don't render repeated cards
+  // dedupe identical image URLs (and normalize objects) so we don't render repeated cards
   const displayImages = Array.isArray(images)
-    ? Array.from(new Set(images))
+    ? Array.from(
+        new Set(
+          images
+            .map((it) => {
+              if (!it) return null;
+              if (typeof it === "string") return it;
+              // common response shapes: { url } or { src }
+              if (typeof it === "object") return it.url || it.src || JSON.stringify(it);
+              return String(it);
+            })
+            .filter(Boolean)
+        )
+      )
     : [];
   // clamp percentage label position so it stays inside the bar
   const pctPos = Math.min(98, Math.max(2, progress));
@@ -331,25 +344,29 @@ const App = () => {
               displayImages.map((src, idx) => (
                 <div
                   key={`${idx}-${src}`}
-                  className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden shadow-md"
+                  className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden shadow-md flex flex-col"
                 >
-                  <div className="w-full h-64 bg-black flex items-center justify-center">
+                  <div className="w-full bg-black flex items-center justify-center">
                     {loading ? (
-                      <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-emerald-500"></div>
+                      <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-emerald-500 p-8"></div>
                     ) : (
-                      <img
-                        src={src}
-                        alt={`generated ${idx + 1}`}
-                        className="object-cover w-full h-64"
-                      />
+                      <button
+                        onClick={() => setPreviewSrc(src)}
+                        className="w-full h-48 sm:h-56 md:h-64 block p-0 m-0 bg-black"
+                        aria-label={`Preview image ${idx + 1}`}
+                      >
+                        <img
+                          src={src}
+                          alt={`generated ${idx + 1}`}
+                          className="object-cover w-full h-full"
+                          loading="lazy"
+                        />
+                      </button>
                     )}
                   </div>
                   <div className="p-4 flex items-center justify-between gap-4">
                     <div className="flex-1">
-                      <p className="text-sm text-neutral-300 truncate">
-                        Variant {idx + 1}
-                      </p>
-                      {/* prompt and aspect ratio shown once above the results */}
+                      <p className="text-sm text-neutral-300 truncate">Variant {idx + 1}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <button
@@ -368,6 +385,19 @@ const App = () => {
         </section>
       </main>
   {/* generations are now shown inline; modal removed */}
+      {previewSrc && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => setPreviewSrc(null)}
+        >
+          <div className="bg-neutral-900 rounded-xl p-3 max-w-[95vw] max-h-[90vh] overflow-auto">
+            <img src={previewSrc} alt="preview" className="max-w-full max-h-[80vh] object-contain rounded-md" />
+            <div className="flex justify-end mt-2">
+              <button onClick={() => setPreviewSrc(null)} className="px-4 py-2 rounded bg-emerald-700 text-white">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
