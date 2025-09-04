@@ -370,45 +370,37 @@ const App = () => {
                 )}
               </div>
             ) : (
-              displayImages.map((src, idx) => (
-                <div
-                  key={`${idx}-${src}`}
-                  className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden shadow-md flex flex-col"
-                >
-                  <div className="w-full bg-black flex items-center justify-center">
-                    {loading ? (
-                      <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-emerald-500 p-8"></div>
-                    ) : (
-                      <button
-                        onClick={() => setPreviewSrc(src)}
-                        className="w-full h-48 sm:h-56 md:h-64 block p-0 m-0 bg-black"
-                        aria-label={`Preview image ${idx + 1}`}
-                      >
-                        <img
-                          src={src}
-                          alt={`generated ${idx + 1}`}
-                          className="object-cover w-full h-full"
-                          loading="lazy"
-                        />
-                      </button>
-                    )}
+              <div className="col-span-1 sm:col-span-2 p-2">
+                <div className="flex flex-col gap-4">
+                  {/* Large horizontally scrollable gallery of tall thumbnails */}
+                  <div className="flex gap-6 overflow-x-auto py-2 -mx-2 px-2 scrollbar-hide">
+                    {displayImages.map((src, idx) => (
+                      <div key={`${idx}-${src}`} className="flex-none w-44 sm:w-56 md:w-64">
+                        <button
+                          onClick={() => setPreviewSrc(src)}
+                          className="block w-full h-72 sm:h-80 md:h-96 bg-black rounded-md overflow-hidden shadow-inner"
+                          aria-label={`Preview image ${idx + 1}`}
+                        >
+                          <img
+                            src={src}
+                            alt={`generated ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                  <div className="p-4 flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <p className="text-sm text-neutral-300 truncate">Variant {idx + 1}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleDownload(src, idx)}
-                        className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition flex items-center gap-2 shadow-sm"
-                      >
-                        <i className="ri-download-line"></i>
-                        Download
+                  {/* Optional secondary row: thumbnails as a compact strip */}
+                  <div className="flex gap-3 overflow-x-auto py-1 -mx-2 px-2">
+                    {displayImages.map((src, idx) => (
+                      <button key={`thumb-${idx}-${src}`} onClick={() => setPreviewSrc(src)} className="flex-none w-20 h-28 sm:w-24 sm:h-32 bg-black rounded-md overflow-hidden shadow-sm">
+                        <img src={src} alt={`thumb ${idx}`} className="w-full h-full object-cover" loading="lazy" />
                       </button>
-                    </div>
+                    ))}
                   </div>
                 </div>
-              ))
+              </div>
             )}
           </div>
         </section>

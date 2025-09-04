@@ -43,6 +43,15 @@ html {
 	display: none; /* Chrome, Safari, Opera */
 }
 
+/* alias for components that use the name "scrollbar-hide" */
+.scrollbar-hide {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}
+
 /* Small tweak for reduced motion / small screens */
 @media (max-width: 640px) {
 	:root { --scrollbar-width: 8px; }
