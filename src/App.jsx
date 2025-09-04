@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from 'react-router-dom'
 import { supabase } from './lib/supabaseClient'
+import './index.css'
 
 const aspectRatios = [
   { label: "Square (default)", value: "--ar 1:1" },
@@ -199,8 +200,8 @@ const App = () => {
   }
 
   return (
-    <div className="bg-neutral-950 min-h-screen p-8 text-white ">
-      <main className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div className="bg-neutral-950 min-h-screen text-white">
+      <main className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
         <section className="md:col-span-1 bg-neutral-900 p-4 rounded-lg shadow-lg">
           <div className="flex">
             <i className="ri-arrow-drop-right-fill"></i>
