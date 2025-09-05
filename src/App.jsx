@@ -30,6 +30,9 @@ const App = () => {
   const [aspectRatio, setAspectRatio] = useState(aspectRatios[0].value);
   const promptRef = useRef(null);
 
+  // Polling URL state (so you can pass to generations page)
+  const [pollingUrl, setPollingUrl] = useState("");
+
   const abortRef = useRef(null);
   const generationStartRef = useRef(null);
 
@@ -84,25 +87,27 @@ const App = () => {
   // clamp percentage label position so it stays inside the bar
   const pctPos = Math.min(98, Math.max(2, progress));
 
-  // Save generation into Supabase and return inserted row (id, api_id, created_at)
-  async function saveGeneration(apiId, promptText, aspect, imgs) {
+  // Save generation into Supabase and return inserted row (id, api_id, polling_url, created_at)
+  async function saveGeneration(apiId, pollUrl, promptText, aspect, imgs) {
     if (!supabase) return null;
     try {
       const payload = {
         api_id: apiId || null,
+        polling_url: pollUrl || null,
         prompt: promptText,
         aspect_ratio: aspect,
         images: imgs,
       };
 
+      // request returned row (id, api_id, polling_url, created_at)
       const { data, error } = await supabase
         .from("generations")
         .insert([payload])
-        .select("id, api_id, created_at")
+        .select("id, api_id, polling_url, created_at")
         .single();
 
       if (error) throw error;
-      return data; // object with id, api_id, created_at
+      return data; // object with id, api_id, polling_url, created_at
     } catch (e) {
       console.warn("supabase insert error", e);
       return null;
@@ -113,6 +118,7 @@ const App = () => {
     // reset any previous saved gen info for a fresh run
     setGenerationId(null);
     setDbEndTime(null);
+    setPollingUrl("");
 
     const usedPrompt =
       typeof overridePrompt === "string" ? overridePrompt : prompt;
@@ -149,18 +155,21 @@ const App = () => {
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
-    
-      // capture api id if provided
+
+      // capture api id and initial polling url if provided
       let apiId = data?.id ?? null;
-      // console.log("Generation started, id:", apiId);
-      
+      let pollUrl =
+        data?.pollingUrl || data?.polling_url || (data?.id ? `${base}?id=${data.id}` : null);
+      // expose to UI / save to DB
+      setPollingUrl(pollUrl || "");
+
       // immediate completed response
       if (data.status === "completed" && Array.isArray(data.results)) {
         setImages(data.results);
         setProgress(100);
         // save generation to supabase (best-effort) and capture db id + created_at
         try {
-          const saved = await saveGeneration(apiId, usedPrompt, aspectRatio, data.results);
+          const saved = await saveGeneration(apiId, pollUrl, usedPrompt, aspectRatio, data.results);
           if (saved?.id) {
             setGenerationId(saved.id);
             if (saved.created_at) setDbEndTime(new Date(saved.created_at).getTime());
@@ -175,12 +184,15 @@ const App = () => {
         return;
       }
 
-      let pollUrl =
-        data.pollingUrl ||
-        data.polling_url ||
-        (data.id ? `${base}?id=${data.id}` : null);
+      // Not completed immediately — use polling
+      let pollUrlActive = pollUrl;
+      if (!pollUrlActive) {
+        // fallback: construct by id if possible
+        pollUrlActive = data?.id ? `${base}?id=${data.id}` : null;
+        setPollingUrl(pollUrlActive || "");
+      }
 
-      if (!pollUrl) {
+      if (!pollUrlActive) {
         throw new Error("No polling url returned by API");
       }
 
@@ -193,15 +205,19 @@ const App = () => {
         attempts += 1;
         setProgress(Math.min(95, 20 + attempts * 10));
 
-        const r = await fetch(pollUrl, {
+        const r = await fetch(pollUrlActive, {
           method: "GET",
           signal: controller.signal,
         });
         if (!r.ok) throw new Error(`Polling HTTP ${r.status}`);
         const j = await r.json();
 
-        // update apiId if returned on polling responses
+        // update apiId and polling url if returned on polling responses
         apiId = apiId || j?.id || null;
+        if (j?.pollingUrl || j?.polling_url) {
+          pollUrlActive = j.pollingUrl || j.polling_url;
+          setPollingUrl(pollUrlActive);
+        }
 
         if (
           j.status === "completed" &&
@@ -211,7 +227,7 @@ const App = () => {
           setImages(j.results);
           setProgress(100);
           try {
-            const saved = await saveGeneration(apiId, usedPrompt, aspectRatio, j.results);
+            const saved = await saveGeneration(apiId, pollUrlActive, usedPrompt, aspectRatio, j.results);
             if (saved?.id) {
               setGenerationId(saved.id);
               if (saved.created_at) setDbEndTime(new Date(saved.created_at).getTime());
@@ -229,7 +245,9 @@ const App = () => {
           throw new Error(j.message || "Generation failed");
         }
 
-        if (j.pollingUrl) pollUrl = j.pollingUrl;
+        // follow any updated polling url
+        if (j.pollingUrl) pollUrlActive = j.pollingUrl;
+        if (j.polling_url) pollUrlActive = j.polling_url;
 
         await new Promise((res) => setTimeout(res, 1500));
       }
@@ -261,7 +279,7 @@ const App = () => {
     try {
       const { data, error } = await supabase
         .from("generations")
-        .select("id, prompt, aspect_ratio, images, created_at")
+        .select("id, api_id, polling_url, prompt, aspect_ratio, images, created_at")
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
@@ -295,6 +313,7 @@ const App = () => {
     setImages([]);
     setGenerationId(null);
     setDbEndTime(null);
+    setPollingUrl("");
   }
 
   return (
@@ -357,6 +376,12 @@ const App = () => {
               <i className="ri-image-ai-line"></i>
               {loading ? "Generating..." : "Generate"}
             </button>
+          </div>
+
+          {/* Debug: show current polling URL & maybe API id */}
+          <div className="mt-4 text-xs text-neutral-400">
+            <div>Polling URL: <span className="text-neutral-200 truncate block max-w-xs">{pollingUrl || "—"}</span></div>
+            <div>DB id: <span className="text-neutral-200">{generationId ?? "—"}</span></div>
           </div>
         </section>
 
