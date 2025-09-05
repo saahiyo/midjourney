@@ -56,3 +56,17 @@ html {
 @media (max-width: 640px) {
 	:root { --scrollbar-width: 8px; }
 }
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}

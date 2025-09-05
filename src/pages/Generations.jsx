@@ -2,25 +2,28 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import Toast from "../components/Toast";
+import ConfirmationModal from "../components/ConfirmationModal";
 
-// Loading skeleton component
+// Loading skeleton
 const GenerationSkeleton = () => (
-  <div className="bg-neutral-800 p-4 rounded-xl animate-pulse">
-    <div className="h-4 bg-neutral-700 rounded mb-2"></div>
-    <div className="h-3 bg-neutral-700 rounded w-2/3 mb-2"></div>
-    <div className="flex gap-2 mb-2">
+  <div className="bg-neutral-800 p-2 rounded-xl shadow-md animate-pulse flex flex-col gap-3 border border-transparent min-h-[240px]">
+    <div className="px-1">
+      <div className="h-4 bg-neutral-700 rounded mb-2 w-3/4"></div>
+      <div className="h-3 bg-neutral-700 rounded w-2/3"></div>
+    </div>
+    <div className="grid grid-cols-2 gap-2 flex-grow px-1">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="flex-1 h-20 bg-neutral-700 rounded-lg"></div>
+        <div key={i} className="aspect-square bg-neutral-700 rounded-lg" />
       ))}
     </div>
-    <div className="flex justify-between">
-      <div className="h-6 bg-neutral-700 rounded w-16"></div>
-      <div className="h-6 bg-neutral-700 rounded w-12"></div>
+    <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-neutral-700 px-1">
+      <div className="h-8 bg-neutral-700 rounded w-1/2"></div>
+      <div className="h-8 bg-neutral-700 rounded w-24"></div>
     </div>
   </div>
 );
 
-// Error boundary component
+// Error message
 const ErrorMessage = ({ message, onRetry }) => (
   <div className="text-center py-12">
     <div className="text-red-400 mb-4">{message}</div>
@@ -35,19 +38,17 @@ const ErrorMessage = ({ message, onRetry }) => (
   </div>
 );
 
-// Individual generation card component
-const GenerationCard = ({ generation, onDelete, onPreview, showToast }) => {
+// Card
+const GenerationCard = ({
+  generation,
+  onRequestDelete,
+  onPreview,
+  showToast,
+}) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this generation?")) return;
-
-    setIsDeleting(true);
-    try {
-      await onDelete(generation.id);
-    } finally {
-      setIsDeleting(false);
-    }
+  const handleDeleteClick = () => {
+    onRequestDelete(generation.id, () => setIsDeleting(false));
   };
 
   const handlePolling = () => {
@@ -84,7 +85,7 @@ const GenerationCard = ({ generation, onDelete, onPreview, showToast }) => {
         </button>
 
         <button
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
           disabled={isDeleting}
           className="px-3 py-1.5 rounded bg-red-900 text-xs text-red-300 hover:bg-red-700 hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -96,7 +97,7 @@ const GenerationCard = ({ generation, onDelete, onPreview, showToast }) => {
   );
 };
 
-// Image preview modal
+// Preview modal
 const ImagePreview = ({ generation, src, onClose }) => {
   useEffect(() => {
     const handleEscape = (e) => {
@@ -105,27 +106,30 @@ const ImagePreview = ({ generation, src, onClose }) => {
 
     document.addEventListener("keydown", handleEscape);
     document.body.style.overflow = "hidden";
-
     return () => {
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "unset";
     };
   }, [onClose]);
 
-  const formatDate = useMemo(() => {
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(generation.created_at));
-  }, [generation.created_at]);
+  const formatDate = useMemo(
+    () =>
+      new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }).format(new Date(generation.created_at)),
+    [generation.created_at]
+  );
 
-  const formatTime = useMemo(() => {
-    return new Intl.DateTimeFormat("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(generation.created_at));
-  }, [generation.created_at]);
+  const formatTime = useMemo(
+    () =>
+      new Intl.DateTimeFormat("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(generation.created_at)),
+    [generation.created_at]
+  );
 
   return (
     <div
@@ -139,9 +143,15 @@ const ImagePreview = ({ generation, src, onClose }) => {
         className="bg-neutral-900 rounded-lg p-2 shadow-2xl border border-emerald-700/50 max-w-3xl w-full flex flex-col gap-2"
         onClick={(e) => e.stopPropagation()}
       >
-        <img src={src} alt="Preview" className="max-w-full max-h-[80vh] object-contain rounded-md" />
+        <img
+          src={src}
+          alt="Preview"
+          className="max-w-full max-h-[80vh] object-contain rounded-md"
+        />
         <div className="text-neutral-300 text-xs bg-neutral-800 p-2 rounded-md">
-          <p className="font-mono text-sm text-white mb-2">{generation.prompt}</p>
+          <p className="font-mono text-sm text-white mb-2">
+            {generation.prompt}
+          </p>
           <div className="flex justify-between text-xs text-neutral-400">
             <span>
               {formatDate} at {formatTime}
@@ -162,21 +172,31 @@ export default function Generations() {
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
 
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    generationId: null,
+    onComplete: null,
+  });
+
   const loadGenerations = useCallback(async () => {
     if (!supabase) return;
-
     setLoading(true);
     setError(null);
 
     try {
       const { data, error } = await supabase
         .from("generations")
-        .select("id, api_id, polling_url, prompt, aspect_ratio, images, created_at")
+        .select(
+          "id, api_id, polling_url, prompt, aspect_ratio, images, created_at"
+        )
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      const sanitized = (data || []).map((g) => ({ ...g, images: g.images || [] }));
+      const sanitized = (data || []).map((g) => ({
+        ...g,
+        images: g.images || [],
+      }));
       setSavedGenerations(sanitized);
     } catch (e) {
       console.error("Failed to load generations:", e);
@@ -190,19 +210,24 @@ export default function Generations() {
     loadGenerations();
   }, [loadGenerations]);
 
-  const handleDelete = useCallback(
-    async (id) => {
+  const handleDeleteConfirmed = useCallback(
+    async (id, onComplete) => {
       if (!supabase) return;
 
       try {
-        const { error } = await supabase.from("generations").delete().eq("id", id);
-
+        const { error } = await supabase
+          .from("generations")
+          .delete()
+          .eq("id", id);
         if (error) throw error;
 
         await loadGenerations();
+        setToast("Generation deleted successfully");
       } catch (e) {
         console.error("Failed to delete generation:", e);
         setError("Failed to delete generation. Please try again.");
+      } finally {
+        if (onComplete) onComplete();
       }
     },
     [loadGenerations]
@@ -215,44 +240,69 @@ export default function Generations() {
         month: "short",
         day: "numeric",
       });
-      if (!acc[date]) {
-        acc[date] = [];
-      }
+      if (!acc[date]) acc[date] = [];
       acc[date].push(generation);
       return acc;
     }, {});
     return Object.entries(groups);
   }, [savedGenerations]);
 
-  const handlePreview = (generation, src) => {
-    setPreview({ generation, src });
-  };
+  const handlePreview = (generation, src) => setPreview({ generation, src });
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white">
       <main className="max-w-6xl mx-auto ">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 border-b border-neutral-800 pb-4">
-          <div>
-            <h1 className="text-xl mb-1 text-neutral-400">Saved Generations</h1>
-            {savedGenerations.length > 0 && (
-              <p className="text-sm text-neutral-400">
-                {savedGenerations.length} generation{savedGenerations.length !== 1 ? "s" : ""} total
-              </p>
-            )}
+        {/* Header */}
+        <div className="w-full mb-6 border-b border-neutral-800 pb-4">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-xl text-neutral-400">Saved Generations</h1>
+            <button
+              onClick={() => navigate(-1)}
+              className="px-4 py-2 text-md text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors duration-200"
+            >
+              ← Back
+            </button>
           </div>
-          <button
-            onClick={() => navigate(-1)}
-            className="px-4 py-2 text-md text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors duration-200"
-          >
-            ← Back
-          </button>
+
+          {savedGenerations.length > 0 && (
+            <p className="text-sm text-neutral-400">
+              <i className="ri-arrow-right-circle-fill mr-2"></i>
+              {savedGenerations.length} generation
+              {savedGenerations.length !== 1 ? "s" : ""} total
+              <i className="ri-arrow-right-long-line mx-2"></i>
+              {
+                savedGenerations.filter((gen) => {
+                  const created = new Date(gen.created_at);
+                  const today = new Date();
+                  return (
+                    created.getDate() === today.getDate() &&
+                    created.getMonth() === today.getMonth() &&
+                    created.getFullYear() === today.getFullYear()
+                  );
+                }).length
+              }{" "}
+              generation
+              {savedGenerations.filter((gen) => {
+                const created = new Date(gen.created_at);
+                const today = new Date();
+                return (
+                  created.getDate() === today.getDate() &&
+                  created.getMonth() === today.getMonth() &&
+                  created.getFullYear() === today.getFullYear()
+                );
+              }).length !== 1
+                ? "s"
+                : ""}{" "}
+              today
+            </p>
+          )}
         </div>
 
-        {/* Error State */}
+        {/* Error */}
         {error && <ErrorMessage message={error} onRetry={loadGenerations} />}
 
-        {/* Loading State */}
+        {/* Loading */}
         {loading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
@@ -261,26 +311,38 @@ export default function Generations() {
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Empty */}
         {!loading && !error && savedGenerations.length === 0 && (
           <div className="text-center py-16">
-            <div className="text-neutral-500 text-lg mb-2">No generations found</div>
-            <p className="text-neutral-400 text-sm">Your saved AI generations will appear here</p>
+            <div className="text-neutral-500 text-lg mb-2">
+              No generations found
+            </div>
+            <p className="text-neutral-400 text-sm">
+              Your saved AI generations will appear here
+            </p>
           </div>
         )}
 
-        {/* Generations Grid */}
+        {/* Generations */}
         {!loading && !error && groupedGenerations.length > 0 && (
           <div className="flex flex-col gap-8">
             {groupedGenerations.map(([date, generations]) => (
               <div key={date}>
-                <h2 className="text-lg font-semibold text-neutral-300 mb-4">{date}</h2>
+                <h2 className="text-lg font-semibold text-neutral-300 mb-4">
+                  {date}
+                </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {generations.map((generation) => (
                     <GenerationCard
                       key={generation.id}
                       generation={generation}
-                      onDelete={handleDelete}
+                      onRequestDelete={(id, onComplete) =>
+                        setConfirmModal({
+                          open: true,
+                          generationId: id,
+                          onComplete,
+                        })
+                      }
                       onPreview={handlePreview}
                       showToast={(msg) => setToast(msg)}
                     />
@@ -291,11 +353,42 @@ export default function Generations() {
           </div>
         )}
 
-        {/* Image Preview Modal */}
-        {preview && <ImagePreview generation={preview.generation} src={preview.src} onClose={() => setPreview(null)} />}
+        {/* Preview modal */}
+        {preview && (
+          <ImagePreview
+            generation={preview.generation}
+            src={preview.src}
+            onClose={() => setPreview(null)}
+          />
+        )}
 
         {/* Toast */}
         {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+
+        {/* Confirmation modal */}
+        <ConfirmationModal
+          isOpen={confirmModal.open}
+          title="Delete Generation?"
+          message="This action cannot be undone. Do you really want to delete this generation?"
+          onConfirm={() => {
+            handleDeleteConfirmed(
+              confirmModal.generationId,
+              confirmModal.onComplete
+            );
+            setConfirmModal({
+              open: false,
+              generationId: null,
+              onComplete: null,
+            });
+          }}
+          onCancel={() =>
+            setConfirmModal({
+              open: false,
+              generationId: null,
+              onComplete: null,
+            })
+          }
+        />
       </main>
     </div>
   );
