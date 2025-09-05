@@ -35,6 +35,34 @@ const App = () => {
 
   const [displayAspectr, setDisplayAspectr] = useState(aspectRatios[0].label);
 
+  const [dbEndTime, setDbEndTime] = useState(null);
+  const [generationId, setGenerationId] = useState(null); // supabase row id
+  const [savedGenerations, setSavedGenerations] = useState([]);
+
+  // helper: label from aspect value
+  const getAspectLabel = (value) => {
+    const found = aspectRatios.find((r) => r.value === value);
+    return found ? found.label : value;
+  };
+
+  // fallback fetch created_at if needed (e.g. page reload)
+  useEffect(() => {
+    if (!loading && generationId && !dbEndTime) {
+      const fetchEndTime = async () => {
+        const { data, error } = await supabase
+          .from("generations")
+          .select("created_at")
+          .eq("id", generationId)
+          .single();
+
+        if (data?.created_at) {
+          setDbEndTime(new Date(data.created_at).getTime());
+        }
+      };
+
+      fetchEndTime();
+    }
+  }, [loading, generationId, dbEndTime]);
 
   // dedupe identical image URLs (and normalize objects) so we don't render repeated cards
   const displayImages = Array.isArray(images)
@@ -56,13 +84,40 @@ const App = () => {
   // clamp percentage label position so it stays inside the bar
   const pctPos = Math.min(98, Math.max(2, progress));
 
+  // Save generation into Supabase and return inserted row (id, api_id, created_at)
+  async function saveGeneration(apiId, promptText, aspect, imgs) {
+    if (!supabase) return null;
+    try {
+      const payload = {
+        api_id: apiId || null,
+        prompt: promptText,
+        aspect_ratio: aspect,
+        images: imgs,
+      };
+
+      const { data, error } = await supabase
+        .from("generations")
+        .insert([payload])
+        .select("id, api_id, created_at")
+        .single();
+
+      if (error) throw error;
+      return data; // object with id, api_id, created_at
+    } catch (e) {
+      console.warn("supabase insert error", e);
+      return null;
+    }
+  }
+
   async function handleGenerate(overridePrompt) {
-    // if called from an onClick handler React will pass the event as the first arg.
-    // only treat overridePrompt as an override when it's a string; otherwise use the `prompt` state.
+    // reset any previous saved gen info for a fresh run
+    setGenerationId(null);
+    setDbEndTime(null);
+
     const usedPrompt =
       typeof overridePrompt === "string" ? overridePrompt : prompt;
     setdisplayPrompt(usedPrompt);
-    setDisplayAspectr(aspectRatio);
+    setDisplayAspectr(getAspectLabel(aspectRatio));
     setError(null);
     if (!usedPrompt.trim()) {
       setError("Please enter a prompt.");
@@ -94,15 +149,28 @@ const App = () => {
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
-
+    
+      // capture api id if provided
+      let apiId = data?.id ?? null;
+      // console.log("Generation started, id:", apiId);
+      
+      // immediate completed response
       if (data.status === "completed" && Array.isArray(data.results)) {
         setImages(data.results);
         setProgress(100);
-        // save generation to supabase (best-effort)
+        // save generation to supabase (best-effort) and capture db id + created_at
         try {
-          await saveGeneration(usedPrompt, aspectRatio, data.results);
+          const saved = await saveGeneration(apiId, usedPrompt, aspectRatio, data.results);
+          if (saved?.id) {
+            setGenerationId(saved.id);
+            if (saved.created_at) setDbEndTime(new Date(saved.created_at).getTime());
+          } else {
+            // fallback end time if DB save failed
+            setDbEndTime(Date.now());
+          }
         } catch (e) {
           console.warn("Failed to save generation", e);
+          setDbEndTime(Date.now());
         }
         return;
       }
@@ -111,6 +179,7 @@ const App = () => {
         data.pollingUrl ||
         data.polling_url ||
         (data.id ? `${base}?id=${data.id}` : null);
+
       if (!pollUrl) {
         throw new Error("No polling url returned by API");
       }
@@ -131,6 +200,9 @@ const App = () => {
         if (!r.ok) throw new Error(`Polling HTTP ${r.status}`);
         const j = await r.json();
 
+        // update apiId if returned on polling responses
+        apiId = apiId || j?.id || null;
+
         if (
           j.status === "completed" &&
           Array.isArray(j.results) &&
@@ -139,9 +211,16 @@ const App = () => {
           setImages(j.results);
           setProgress(100);
           try {
-            await saveGeneration(usedPrompt, aspectRatio, j.results);
+            const saved = await saveGeneration(apiId, usedPrompt, aspectRatio, j.results);
+            if (saved?.id) {
+              setGenerationId(saved.id);
+              if (saved.created_at) setDbEndTime(new Date(saved.created_at).getTime());
+            } else {
+              setDbEndTime(Date.now());
+            }
           } catch (e) {
             console.warn("Failed to save generation", e);
+            setDbEndTime(Date.now());
           }
           return;
         }
@@ -174,22 +253,6 @@ const App = () => {
       navigate("/generations");
     } catch (e) {
       console.warn(e);
-    }
-  }
-  const [savedGenerations, setSavedGenerations] = useState([]);
-
-  async function saveGeneration(promptText, aspect, imgs) {
-    if (!supabase) return;
-    try {
-      const payload = {
-        prompt: promptText,
-        aspect_ratio: aspect,
-        images: imgs,
-      };
-      const { error } = await supabase.from("generations").insert([payload]);
-      if (error) throw error;
-    } catch (e) {
-      console.warn("supabase insert error", e);
     }
   }
 
@@ -229,6 +292,9 @@ const App = () => {
     setError(null);
     setProgress(0);
     setLoading(false);
+    setImages([]);
+    setGenerationId(null);
+    setDbEndTime(null);
   }
 
   return (
@@ -284,7 +350,7 @@ const App = () => {
 
           <div className="mt-6 flex items-center gap-4">
             <button
-              onClick={handleGenerate}
+              onClick={() => handleGenerate()}
               disabled={loading || !prompt.trim()}
               className={`flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-3 rounded-lg shadow-md transition-transform transform hover:scale-102 flex items-center gap-2`}
             >
@@ -309,13 +375,12 @@ const App = () => {
               </p>
               <div className="flex items-center gap-4 mt-1">
                 <p className="text-xs text-neutral-400">
-                  <i class="ri-layout-fill"></i> Aspect Ratio: {displayAspectr}
+                  <i className="ri-layout-fill"></i> Aspect Ratio: {displayAspectr}
                 </p>
                 <ElapsedTime
                   startTime={generationStartRef.current}
-                  endTime={
-                    !loading && displayImages.length > 0 ? Date.now() : null
-                  }/>
+                  endTime={dbEndTime || (!loading && Date.now())}
+                />
               </div>
             </div>
           )}
