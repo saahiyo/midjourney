@@ -1,5 +1,6 @@
 // Toast.jsx
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { gsap } from "gsap";
 import { X } from "lucide-react"; // small close icon (if using lucide-react)
 
 const variantStyles = {
@@ -15,23 +16,64 @@ export default function Toast({
   duration = 3000,
   variant = "info",
 }) {
+  const toastRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
   useEffect(() => {
+    if (toastRef.current) {
+      gsap.fromTo(toastRef.current,
+        { opacity: 0, x: 100, scale: 0.8 },
+        { opacity: 1, x: 0, scale: 1, duration: 0.4, ease: "back.out(1.7)" }
+      );
+    }
+
     const timer = setTimeout(() => {
-      onClose();
+      handleClose();
     }, duration);
+    
     return () => clearTimeout(timer);
   }, [onClose, duration]);
 
+  const handleClose = () => {
+    if (toastRef.current) {
+      gsap.to(toastRef.current, {
+        opacity: 0,
+        x: 100,
+        scale: 0.8,
+        duration: 0.3,
+        ease: "power2.in",
+        onComplete: onClose
+      });
+    } else {
+      onClose();
+    }
+  };
+
+  const handleCloseButtonClick = () => {
+    if (closeButtonRef.current) {
+      gsap.to(closeButtonRef.current, {
+        scale: 0.9,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut"
+      });
+    }
+    handleClose();
+  };
+
   return (
     <div
+      ref={toastRef}
       role="status"
       aria-live="polite"
-      className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-2 rounded-full shadow-lg border text-sm animate-slideIn ${variantStyles[variant]}`}
+      className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-2 rounded-full shadow-lg border text-sm ${variantStyles[variant]}`}
     >
       <span className="flex-1">{message}</span>
       <button
-        onClick={onClose}
-        className="hover:opacity-75 transition"
+        ref={closeButtonRef}
+        onClick={handleCloseButtonClick}
+        className="hover:opacity-75"
         aria-label="Close"
       >
         <X size={16} />

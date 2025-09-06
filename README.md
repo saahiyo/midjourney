@@ -1,57 +1,181 @@
-# React + Vite
+# MidJourney Image Generation App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, responsive React application for generating AI images using the MidJourney API. Features a sleek dark theme interface, real-time progress tracking, and comprehensive error handling.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-# MidJourney Preview (React + Vite)
+- **AI Image Generation**: Generate stunning images using MidJourney API
+- **Real-time Progress**: Live progress tracking with polling mechanism
+- **Responsive Design**: Optimized for desktop and mobile devices
+- **Error Handling**: Comprehensive error boundaries and user-friendly messages
+- **Accessibility**: Full ARIA support and keyboard navigation
+- **Performance**: Optimized with React.memo, useMemo, and useCallback
+- **Type Safety**: Input validation and sanitization
+- **Database Integration**: Supabase for saving generation history
 
-This small React + Vite app provides a UI for generating image previews via a MidJourney-like proxy API. It focuses on a clean UX: prompt entry, aspect-ratio presets, example prompts, and a responsive results grid.
+## 🚀 Quick Start
 
-## Features
-- Prompt input with example prompts (click to paste into the prompt box)
-- Aspect ratio presets (1:1, 3:2, 16:9, 21:9, 2:3, 9:16)
-- Deduped result grid (identical image URLs are removed)
-- Progress bar with moving percentage label during generation
-- Error and empty states rendered inside the results area
+### Prerequisites
 
-## Quick start
+- Node.js 18+ 
+- npm or yarn
+- Supabase account (optional, for saving generations)
 
-Requirements: Node.js (16+ recommended) and npm.
+### Installation
 
-1. Install dependencies
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd midjourney
+   ```
 
-```powershell
-npm install
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   Create a `.env.local` file in the root directory:
+   ```env
+   VITE_MJ_API_URL=your_midjourney_api_url
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+4. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+5. **Open your browser**
+   Navigate to `http://localhost:5173`
+
+## 🛠️ Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## 🏗️ Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ErrorBoundary.jsx
+│   ├── ImageGallery.jsx
+│   ├── ImagePreviewModal.jsx
+│   ├── PromptForm.jsx
+│   └── ...
+├── hooks/              # Custom React hooks
+│   ├── useImageGeneration.js
+│   ├── usePromptForm.js
+│   └── useImagePreview.js
+├── utils/              # Utility functions
+│   ├── constants.js
+│   ├── errorHandler.js
+│   └── validation.js
+├── constants/          # Application constants
+├── lib/               # External library configurations
 ```
 
-2. Start the dev server
+## 🎨 Key Components
 
-```powershell
-npm run dev
-```
+### Custom Hooks
 
-3. Open the app in your browser (Vite will print the local URL)
+- **`useImageGeneration`**: Manages image generation state and API calls
+- **`usePromptForm`**: Handles form state and validation
+- **`useImagePreview`**: Manages image preview modal state
 
-## How to use
-- Type a prompt in the left column and choose an aspect ratio.
-- Click Generate to start a job. While the job runs the results area shows a progress bar and percentage that moves with the bar.
-- If the app shows "No images to display", click one of the example chips to paste a ready-made prompt into the input.
-- Each generated image has a Download button.
+### Components
 
-## Notes
-- Polling timeout: the app waits up to 5 minutes for the generation to complete (configurable in `src/App.jsx`).
-- The empty state includes example prompts and quick tips to reduce friction for new users.
-- Deduplication is performed by comparing image URLs. If your API returns unique URLs for identical images you may want to dedupe by image content or an ID instead.
+- **`PromptForm`**: Input form with validation and aspect ratio selection
+- **`ImageGallery`**: Displays generated images with responsive layout
+- **`ErrorBoundary`**: Catches and handles React errors gracefully
+- **`ImagePreviewModal`**: Full-screen image preview with keyboard support
 
-## Troubleshooting
-- If Generate doesn't start, verify there is a prompt in the input and check the browser console for errors.
-- If the proxy API is down or slow the UI will show errors or may time out. You can cancel a running job by pressing Clear.
+## 🔧 Configuration
 
-## Development notes
-- The main UI lives in `src/App.jsx`.
-- Feel free to add example prompts, tweak the polling timeout, or improve the dedupe logic.
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `VITE_MJ_API_URL` | MidJourney API endpoint | Yes |
+| `VITE_SUPABASE_URL` | Supabase project URL | No |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key | No |
+
+### API Configuration
+
+The app expects the MidJourney API to support:
+- GET requests with `prompt` and `usePolling` parameters
+- Polling mechanism for long-running generations
+- JSON responses with `status`, `results`, and `pollingUrl` fields
+
+
+## 🚀 Performance Optimizations
+
+- **React.memo**: Prevents unnecessary re-renders
+- **useMemo/useCallback**: Optimizes expensive calculations
+- **Lazy loading**: Images load only when needed
+- **Debounced inputs**: Reduces API calls
+- **Error boundaries**: Prevents app crashes
+
+## ♿ Accessibility Features
+
+- **ARIA labels**: Screen reader support
+- **Keyboard navigation**: Full keyboard accessibility
+- **Focus management**: Proper focus handling in modals
+- **Color contrast**: WCAG compliant color scheme
+- **Semantic HTML**: Proper HTML structure
+
+## 🔒 Security Features
+
+- **Input sanitization**: Prevents XSS attacks
+- **Validation**: Client-side input validation
+- **Error handling**: Secure error messages
+- **Environment validation**: Checks for required variables
+
+## 📱 Responsive Design
+
+- **Mobile-first**: Optimized for mobile devices
+- **Flexible layouts**: Adapts to different screen sizes
+- **Touch-friendly**: Large touch targets
+- **Progressive enhancement**: Works without JavaScript
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Make sure your changes work correctly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+1. **API Connection Failed**
+   - Check your `VITE_MJ_API_URL` environment variable
+   - Verify the API endpoint is accessible
+
+2. **Supabase Connection Issues**
+   - Ensure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set
+   - Check your Supabase project settings
+
+3. **Build Errors**
+   - Clear node_modules and reinstall: `rm -rf node_modules && npm install`
+   - Check for TypeScript errors: `npm run lint`
+
+### Getting Help
+
+- Check the [Issues](https://github.com/your-repo/issues) page
+- Review the [Documentation](https://your-docs-url.com)
+- Contact the maintainers
 
 ---
 
-If you'd like, I can add a short CONTRIBUTING section or update `package.json` scripts for deployment. Tell me what you'd like next.
+Built with ❤️ using React, Vite, and Tailwind CSS

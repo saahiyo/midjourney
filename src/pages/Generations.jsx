@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { gsap } from "gsap";
 import { supabase } from "../lib/supabaseClient";
 import Toast from "../components/Toast";
 import ConfirmationModal from "../components/ConfirmationModal";
@@ -46,12 +47,33 @@ const GenerationCard = ({
   showToast,
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const cardRef = useRef(null);
+  const pollingButtonRef = useRef(null);
+  const deleteButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (cardRef.current) {
+      gsap.fromTo(cardRef.current,
+        { opacity: 0, y: 20, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power2.out" }
+      );
+    }
+  }, []);
 
   const handleDeleteClick = () => {
     onRequestDelete(generation.id, () => setIsDeleting(false));
   };
 
   const handlePolling = () => {
+    if (pollingButtonRef.current) {
+      gsap.to(pollingButtonRef.current, {
+        scale: 0.95,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut"
+      });
+    }
     if (!generation.polling_url) {
       showToast("Polling URL not available for this generation");
       return;
@@ -59,15 +81,28 @@ const GenerationCard = ({
     window.open(generation.polling_url, "_blank");
   };
 
+  const handleDeleteButtonClick = () => {
+    if (deleteButtonRef.current) {
+      gsap.to(deleteButtonRef.current, {
+        scale: 0.95,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut"
+      });
+    }
+    handleDeleteClick();
+  };
+
   return (
-    <div className="bg-neutral-800 p-2 rounded-xl shadow-md transition-all duration-200 hover:shadow-emerald-000/50 hover:-translate-y-1 flex flex-col gap-3 border border-transparent hover:border-emerald-700/50">
+    <div ref={cardRef} className="bg-neutral-800 p-2 rounded-xl shadow-md flex flex-col gap-3 border border-transparent hover:border-emerald-700/50">
       <div className="grid grid-cols-2 gap-2 flex-grow">
         {(generation.images || []).slice(0, 4).map((src, i) => (
           <div key={i} className="aspect-square">
             <img
               src={src}
               alt={`Generation ${generation.id} - Image ${i + 1}`}
-              className="w-full h-full object-cover rounded-lg cursor-pointer border-1 border-neutral-900 hover:border-emerald-500 transition-all duration-200 hover:scale-105"
+              className="w-full h-full object-cover rounded-lg cursor-pointer border-1 border-neutral-900 hover:border-emerald-500"
               onClick={() => onPreview(generation, src)}
               loading="lazy"
             />
@@ -77,17 +112,19 @@ const GenerationCard = ({
 
       <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-neutral-700">
         <button
+          ref={pollingButtonRef}
           onClick={handlePolling}
-          className="flex-1 px-3 py-1.5 rounded bg-neutral-900 text-xs text-neutral-300 hover:bg-emerald-700 hover:text-white transition-colors duration-200"
+          className="flex-1 px-3 py-1.5 rounded bg-neutral-900 text-xs text-neutral-300 hover:bg-emerald-700 hover:text-white"
         >
           <i className="ri-link mr-2"></i>
           Open Polling
         </button>
 
         <button
-          onClick={handleDeleteClick}
+          ref={deleteButtonRef}
+          onClick={handleDeleteButtonClick}
           disabled={isDeleting}
-          className="px-3 py-1.5 rounded bg-red-900 text-xs text-red-300 hover:bg-red-700 hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-1.5 rounded bg-red-900 text-xs text-red-300 hover:bg-red-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <i className="ri-delete-bin-line mr-2"></i>
           {isDeleting ? "..." : "Delete"}
@@ -99,18 +136,56 @@ const GenerationCard = ({
 
 // Preview modal
 const ImagePreview = ({ generation, src, onClose }) => {
+  const modalRef = useRef(null);
+  const contentRef = useRef(null);
+
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     };
 
     document.addEventListener("keydown", handleEscape);
     document.body.style.overflow = "hidden";
+
+    // Animate modal in
+    if (modalRef.current && contentRef.current) {
+      gsap.fromTo(modalRef.current, 
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, ease: "power2.out" }
+      );
+      
+      gsap.fromTo(contentRef.current,
+        { scale: 0.8, opacity: 0, y: 50 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.7)" }
+      );
+    }
+
     return () => {
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "unset";
     };
   }, [onClose]);
+
+  const handleClose = () => {
+    if (modalRef.current && contentRef.current) {
+      gsap.to(contentRef.current, {
+        scale: 0.8,
+        opacity: 0,
+        y: 50,
+        duration: 0.2,
+        ease: "power2.in"
+      });
+      
+      gsap.to(modalRef.current, {
+        opacity: 0,
+        duration: 0.2,
+        ease: "power2.in",
+        onComplete: onClose
+      });
+    } else {
+      onClose();
+    }
+  };
 
   const formatDate = useMemo(
     () =>
@@ -133,13 +208,15 @@ const ImagePreview = ({ generation, src, onClose }) => {
 
   return (
     <div
+      ref={modalRef}
       className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-2 sm:p-4"
-      onClick={onClose}
+      onClick={handleClose}
       role="dialog"
       aria-modal="true"
       aria-label="Image preview"
     >
       <div
+        ref={contentRef}
         className="bg-neutral-900 rounded-lg p-2 shadow-2xl border border-emerald-700/50 max-w-3xl w-full flex flex-col gap-2"
         onClick={(e) => e.stopPropagation()}
       >
@@ -172,6 +249,7 @@ export default function Generations() {
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
   const [showPolling, setShowPolling] = useState(false);
+  const backButtonRef = useRef(null);
 
   const [confirmModal, setConfirmModal] = useState({
     open: false,
@@ -250,6 +328,19 @@ export default function Generations() {
 
   const handlePreview = (generation, src) => setPreview({ generation, src });
 
+  const handleBackClick = () => {
+    if (backButtonRef.current) {
+      gsap.to(backButtonRef.current, {
+        scale: 0.95,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut"
+      });
+    }
+    navigate(-1);
+  };
+
   return (
     <div className="min-h-screen bg-neutral-950 text-white">
       <main className="max-w-6xl mx-auto ">
@@ -258,8 +349,9 @@ export default function Generations() {
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-xl text-neutral-400">Saved Generations</h1>
             <button
-              onClick={() => navigate(-1)}
-              className="px-4 py-2 text-md text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors duration-200"
+              ref={backButtonRef}
+              onClick={handleBackClick}
+              className="px-4 py-2 text-md text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg"
             >
               ← Back
             </button>
