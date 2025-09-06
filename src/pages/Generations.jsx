@@ -6,38 +6,143 @@ import Toast from "../components/Toast";
 import ConfirmationModal from "../components/ConfirmationModal";
 
 // Loading skeleton
-const GenerationSkeleton = () => (
-  <div className="bg-neutral-800 p-2 rounded-xl shadow-md animate-pulse flex flex-col gap-3 border border-transparent min-h-[240px]">
-    <div className="px-1">
-      <div className="h-4 bg-neutral-700 rounded mb-2 w-3/4"></div>
-      <div className="h-3 bg-neutral-700 rounded w-2/3"></div>
+const GenerationSkeleton = ({ index = 0 }) => {
+  const skeletonRef = useRef(null);
+  const shimmerRefs = useRef([]);
+
+  useEffect(() => {
+    if (skeletonRef.current) {
+      // Animate skeleton entrance with stagger based on index
+      gsap.fromTo(skeletonRef.current,
+        { opacity: 0, y: 20, scale: 0.95 },
+        { 
+          opacity: 1, 
+          y: 0, 
+          scale: 1, 
+          duration: 0.5, 
+          ease: "power2.out",
+          delay: index * 0.1
+        }
+      );
+
+      // Create shimmer animation for all shimmer elements
+      shimmerRefs.current.forEach((ref, shimmerIndex) => {
+        if (ref) {
+          gsap.to(ref, {
+            opacity: 0.3,
+            duration: 1.2,
+            ease: "power2.inOut",
+            repeat: -1,
+            yoyo: true,
+            delay: (index * 0.1) + (shimmerIndex * 0.1)
+          });
+        }
+      });
+    }
+  }, [index]);
+
+  return (
+    <div ref={skeletonRef} className="bg-neutral-800 p-2 rounded-xl shadow-md flex flex-col gap-3 border border-transparent min-h-[240px]">
+      <div className="px-1">
+        <div ref={el => shimmerRefs.current[0] = el} className="h-4 bg-neutral-700 rounded mb-2 w-3/4"></div>
+        <div ref={el => shimmerRefs.current[1] = el} className="h-3 bg-neutral-700 rounded w-2/3"></div>
+      </div>
+      <div className="grid grid-cols-2 gap-2 flex-grow px-1">
+        {[...Array(4)].map((_, i) => (
+          <div 
+            key={i} 
+            ref={el => shimmerRefs.current[i + 2] = el}
+            className="aspect-square bg-neutral-700 rounded-lg" 
+          />
+        ))}
+      </div>
+      <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-neutral-700 px-1">
+        <div ref={el => shimmerRefs.current[6] = el} className="h-8 bg-neutral-700 rounded w-1/2"></div>
+        <div ref={el => shimmerRefs.current[7] = el} className="h-8 bg-neutral-700 rounded w-24"></div>
+      </div>
     </div>
-    <div className="grid grid-cols-2 gap-2 flex-grow px-1">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="aspect-square bg-neutral-700 rounded-lg" />
-      ))}
-    </div>
-    <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-neutral-700 px-1">
-      <div className="h-8 bg-neutral-700 rounded w-1/2"></div>
-      <div className="h-8 bg-neutral-700 rounded w-24"></div>
-    </div>
-  </div>
-);
+  );
+};
 
 // Error message
-const ErrorMessage = ({ message, onRetry }) => (
-  <div className="text-center py-12">
-    <div className="text-red-400 mb-4">{message}</div>
-    {onRetry && (
-      <button
-        onClick={onRetry}
-        className="px-4 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition"
-      >
-        Try Again
-      </button>
-    )}
-  </div>
-);
+const ErrorMessage = ({ message, onRetry }) => {
+  const errorRef = useRef(null);
+  const buttonRef = useRef(null);
+
+  useEffect(() => {
+    if (errorRef.current) {
+      gsap.fromTo(errorRef.current,
+        { opacity: 0, y: 20, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "back.out(1.7)" }
+      );
+    }
+  }, []);
+
+  const handleRetryClick = () => {
+    if (buttonRef.current) {
+      gsap.to(buttonRef.current, {
+        scale: 0.95,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut"
+      });
+    }
+    onRetry();
+  };
+
+  return (
+    <div ref={errorRef} className="text-center py-12">
+      <div className="text-red-400 mb-4">{message}</div>
+      {onRetry && (
+        <button
+          ref={buttonRef}
+          onClick={handleRetryClick}
+          className="px-4 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800"
+        >
+          Try Again
+        </button>
+      )}
+    </div>
+  );
+};
+
+// Empty state
+const EmptyState = () => {
+  const emptyRef = useRef(null);
+  const titleRef = useRef(null);
+  const subtitleRef = useRef(null);
+
+  useEffect(() => {
+    if (emptyRef.current && titleRef.current && subtitleRef.current) {
+      gsap.fromTo(emptyRef.current,
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }
+      );
+      
+      gsap.fromTo(titleRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, delay: 0.2, ease: "power2.out" }
+      );
+      
+      gsap.fromTo(subtitleRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, delay: 0.4, ease: "power2.out" }
+      );
+    }
+  }, []);
+
+  return (
+    <div ref={emptyRef} className="text-center py-16">
+      <div ref={titleRef} className="text-neutral-500 text-lg mb-2">
+        No generations found
+      </div>
+      <p ref={subtitleRef} className="text-neutral-400 text-sm">
+        Your saved AI generations will appear here
+      </p>
+    </div>
+  );
+};
 
 // Card
 const GenerationCard = ({
@@ -398,21 +503,14 @@ export default function Generations() {
         {loading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
-              <GenerationSkeleton key={i} />
+              <GenerationSkeleton key={i} index={i} />
             ))}
           </div>
         )}
 
         {/* Empty */}
         {!loading && !error && savedGenerations.length === 0 && (
-          <div className="text-center py-16">
-            <div className="text-neutral-500 text-lg mb-2">
-              No generations found
-            </div>
-            <p className="text-neutral-400 text-sm">
-              Your saved AI generations will appear here
-            </p>
-          </div>
+          <EmptyState />
         )}
 
         {/* Generations */}
