@@ -3,21 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "./lib/supabaseClient";
 import "./index.css";
 import ElapsedTime from "./components/ElapsedTime";
-
-const aspectRatios = [
-  { label: "Square (default)", value: "--ar 1:1" },
-  { label: "Landscape (classic photo)", value: "--ar 3:2" },
-  { label: "Landscape (widescreen)", value: "--ar 16:9" },
-  { label: "Landscape (ultrawide)", value: "--ar 21:9" },
-  { label: "Portrait (classic photo)", value: "--ar 2:3" },
-  { label: "Portrait (vertical)", value: "--ar 9:16" },
-];
-
-const examples = [
-  "cinematic portrait, dramatic rim light, shallow depth of field",
-  "lush fantasy landscape, golden hour, volumetric light",
-  "sci-fi cityscape, neon lights, rainy night, ultra-detailed",
-];
+import { examples } from "./constants/examplePrompts";
+import { aspectRatios } from "./constants/aspectRatios";
 
 const App = () => {
   const [prompt, setPrompt] = useState("");

@@ -171,6 +171,7 @@ export default function Generations() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
+  const [showPolling, setShowPolling] = useState(false);
 
   const [confirmModal, setConfirmModal] = useState({
     open: false,
@@ -252,7 +253,6 @@ export default function Generations() {
   return (
     <div className="min-h-screen bg-neutral-950 text-white">
       <main className="max-w-6xl mx-auto ">
-        {/* Header */}
         {/* Header */}
         <div className="w-full mb-6 border-b border-neutral-800 pb-4">
           <div className="flex items-center justify-between mb-2">
