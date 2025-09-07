@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../lib/supabaseClient";
+import { useSupabaseRealtime } from "../hooks/useSupabaseRealtime";
+import { useSupabasePresence } from "../hooks/useSupabasePresence";
+import ActiveUsersIndicator from "../components/ActiveUsersIndicator";
 import Toast from "../components/Toast";
 import ConfirmationModal from "../components/ConfirmationModal";
 
@@ -354,7 +357,11 @@ export default function Generations() {
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
   const [showPolling, setShowPolling] = useState(false);
+  const [realtimeUpdates, setRealtimeUpdates] = useState([]);
   const backButtonRef = useRef(null);
+
+  // Setup Realtime presence tracking
+  const { activeUsers, isTracking: isPresenceTracking, presenceError: presenceError } = useSupabasePresence('generations-room');
 
   const [confirmModal, setConfirmModal] = useState({
     open: false,
@@ -390,9 +397,53 @@ export default function Generations() {
     }
   }, []);
 
+  // Handle Realtime updates for new generations
+  const handleGenerationCreated = useCallback((newGeneration) => {
+    console.log('New generation received via Realtime:', newGeneration);
+    
+    // Add the new generation to the beginning of the list
+    setSavedGenerations(prev => {
+      const sanitized = {
+        ...newGeneration,
+        images: newGeneration.images || [],
+      };
+      
+      // Add to toast notification
+      setToast(`New generation by ${newGeneration.prompt.substring(0, 50)}...`);
+      
+      // Return new array with the new generation at the beginning
+      return [sanitized, ...prev];
+    });
+  }, []);
+
+  // Handle Realtime updates for deleted generations
+  const handleGenerationDeleted = useCallback((deletedGeneration) => {
+    console.log('Generation deleted via Realtime:', deletedGeneration);
+    
+    // Remove the deleted generation from the list
+    setSavedGenerations(prev => prev.filter(gen => gen.id !== deletedGeneration.id));
+    
+    // Add to toast notification
+    setToast('Generation deleted by another user');
+  }, []);
+
+  // Setup Realtime subscription
+  const { isConnected, connectionError } = useSupabaseRealtime(
+    handleGenerationCreated,
+    handleGenerationDeleted
+  );
+
   useEffect(() => {
     loadGenerations();
   }, [loadGenerations]);
+
+  // Clear toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const handleDeleteConfirmed = useCallback(
     async (id, onComplete) => {
@@ -452,7 +503,21 @@ export default function Generations() {
         {/* Header */}
         <div className="w-full mb-6 border-b border-neutral-800 pb-4">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-xl text-neutral-400">Saved Generations</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl text-neutral-400">Saved Generations</h1>
+              {isConnected && (
+                <div className="flex items-center gap-1 text-emerald-400 text-sm">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <span>Live</span>
+                </div>
+              )}
+              {connectionError && (
+                <div className="flex items-center gap-1 text-red-400 text-sm">
+                  <i className="ri-error-warning-line"></i>
+                  <span>Disconnected</span>
+                </div>
+              )}
+            </div>
             <button
               ref={backButtonRef}
               onClick={handleBackClick}
