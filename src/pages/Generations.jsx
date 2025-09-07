@@ -464,10 +464,10 @@ export default function Generations() {
 
           {savedGenerations.length > 0 && (
             <p className="text-sm text-neutral-400">
-              <i className="ri-arrow-right-circle-fill mr-2"></i>
+              <i className="ri-arrow-right-circle-fill md:mr-2 mr-1"></i>
               {savedGenerations.length} generation
               {savedGenerations.length !== 1 ? "s" : ""} total
-              <i className="ri-arrow-right-long-line mx-2"></i>
+              <i className="ri-arrow-right-long-line md:mx-2 mx-1"></i>
               {
                 savedGenerations.filter((gen) => {
                   const created = new Date(gen.created_at);

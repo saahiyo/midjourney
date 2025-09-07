@@ -223,10 +223,10 @@ const App = () => {
       </main>
 
         {/* Debug info */}
-        <div className="fixed bottom-4 left-4 text-xs text-neutral-500 bg-neutral-900/80 p-2 rounded">
+        {/* <div className="fixed bottom-4 left-4 text-xs text-neutral-500 bg-neutral-900/80 p-2 rounded">
           <div>Polling URL: <span className="text-neutral-300 truncate block max-w-xs">{pollingUrl || "—"}</span></div>
           <div>DB id: <span className="text-neutral-300">{generationId ?? "—"}</span></div>
-        </div>
+        </div> */}
 
         <ImagePreviewModal src={previewSrc} onClose={closePreview} />
         
