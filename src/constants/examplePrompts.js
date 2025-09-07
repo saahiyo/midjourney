@@ -1,5 +1,5 @@
 export const examples = [
-  "cinematic portrait, dramatic rim light, shallow depth of field",
-  "lush fantasy landscape, golden hour, volumetric light",
-  "sci-fi cityscape, neon lights, rainy night, ultra-detailed",
+  "a cool anime boy with blue hair --niji 6",
+  "A women soldier, black suit, worn out of constant battle, portrait, photoshoot",
+  "a hourglass on study desk, steampunk style, intricate details, 8k",
 ];
