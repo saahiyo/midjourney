@@ -163,7 +163,7 @@ const PromptForm = memo(({
   };
 
   return (
-    <section ref={formRef} className="md:col-span-1 bg-neutral-900 p-4 rounded-lg shadow-lg">
+    <section ref={formRef} className="md:col-span-1 bg-neutral-900 p-4 rounded-lg shadow-lg relative z-10">
       <div className="flex">
         <i className="ri-arrow-drop-right-fill" aria-hidden="true"></i>
         <label className="text-sm text-neutral-400 mb-3 font-medium">
@@ -236,16 +236,17 @@ const PromptForm = memo(({
           {isDropdownOpen && (
             <div
               ref={dropdownListRef}
-              className="absolute top-full left-0 right-0 mt-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto"
+              className="absolute top-full left-0 right-0 mt-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg z-50 overflow-y-auto "
               role="listbox"
               aria-label="Aspect ratio options"
               onKeyDown={handleKeyDown}
+              style={{ maxWidth: 'none' }}
             >
               {aspectRatios.map((ratio, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleAspectRatioChange(ratio.value)}
-                  className={`w-full px-3 py-2 text-left text-white hover:bg-neutral-700 focus:bg-neutral-700 focus:outline-none transition-colors ${
+                  className={`w-full px-4 py-3 text-left text-white hover:bg-neutral-700 focus:bg-neutral-700 focus:outline-none transition-colors ${
                     ratio.value === aspectRatio 
                       ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
                       : ''
@@ -256,7 +257,7 @@ const PromptForm = memo(({
                   aria-selected={ratio.value === aspectRatio}
                 >
                   <div className="flex items-center justify-between">
-                    <span>{ratio.label}</span>
+                    <span className="truncate max-w-xs">{ratio.label}</span>
                     {ratio.value === aspectRatio && (
                       <i className="ri-check-line text-emerald-300" aria-hidden="true"></i>
                     )}
