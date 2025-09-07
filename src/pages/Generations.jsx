@@ -6,7 +6,7 @@ import Toast from "../components/Toast";
 import ConfirmationModal from "../components/ConfirmationModal";
 
 // Loading skeleton
-const GenerationSkeleton = ({ index = 0 }) => {
+const GenerationSkeleton = React.memo(({ index = 0 }) => {
   const skeletonRef = useRef(null);
   const shimmerRefs = useRef([]);
 
@@ -62,10 +62,10 @@ const GenerationSkeleton = ({ index = 0 }) => {
       </div>
     </div>
   );
-};
+});
 
 // Error message
-const ErrorMessage = ({ message, onRetry }) => {
+const ErrorMessage = React.memo(({ message, onRetry }) => {
   const errorRef = useRef(null);
   const buttonRef = useRef(null);
 
@@ -105,10 +105,10 @@ const ErrorMessage = ({ message, onRetry }) => {
       )}
     </div>
   );
-};
+});
 
 // Empty state
-const EmptyState = () => {
+const EmptyState = React.memo(() => {
   const emptyRef = useRef(null);
   const titleRef = useRef(null);
   const subtitleRef = useRef(null);
@@ -142,10 +142,10 @@ const EmptyState = () => {
       </p>
     </div>
   );
-};
+});
 
 // Card
-const GenerationCard = ({
+const GenerationCard = React.memo(({
   generation,
   onRequestDelete,
   onPreview,
@@ -237,10 +237,10 @@ const GenerationCard = ({
       </div>
     </div>
   );
-};
+});
 
 // Preview modal
-const ImagePreview = ({ generation, src, onClose }) => {
+const ImagePreview = React.memo(({ generation, src, onClose }) => {
   const modalRef = useRef(null);
   const contentRef = useRef(null);
 
@@ -344,7 +344,7 @@ const ImagePreview = ({ generation, src, onClose }) => {
       </div>
     </div>
   );
-};
+});
 
 export default function Generations() {
   const navigate = useNavigate();

@@ -1,9 +1,23 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { API_CONFIG } from '../utils/constants';
 import { handleApiError, logError } from '../utils/errorHandler';
 
+/**
+ * useImageGeneration
+ * A robust hook to request image generation from an external API, poll for completion,
+ * save results to Supabase, and provide cancellation + progress updates.
+ *
+ * Improvements in this refactor:
+ * - Mounted guard to avoid setState after unmount
+ * - Proper AbortController management and cleanup
+ * - Centralized error handling via handleApiError + logError
+ * - Polling loop that respects timeouts and aborts, with a stable sleep helper
+ * - Optimistic and safe state updates only when mounted
+ * - Clearer progress milestones and consistent returned state/actions
+ */
 export const useImageGeneration = () => {
+  // public state
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [images, setImages] = useState([]);
@@ -11,213 +25,259 @@ export const useImageGeneration = () => {
   const [pollingUrl, setPollingUrl] = useState('');
   const [generationId, setGenerationId] = useState(null);
   const [dbEndTime, setDbEndTime] = useState(null);
-  
-  const abortRef = useRef(null);
-  const generationStartRef = useRef(null);
 
+  // refs
+  const abortRef = useRef(null); // AbortController for current operation
+  const generationStartRef = useRef(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      // abort any in-flight request on unmount
+      if (abortRef.current) {
+        try { abortRef.current.abort(); } catch (e) { /* noop */ }
+        abortRef.current = null;
+      }
+    };
+  }, []);
+
+  // Helper: safe setState only if mounted
+  const safeSet = (setter) => {
+    return (...args) => {
+      if (mountedRef.current) setter(...args);
+    };
+  };
+
+  const safeSetLoading = safeSet(setLoading);
+  const safeSetProgress = safeSet(setProgress);
+  const safeSetImages = safeSet(setImages);
+  const safeSetError = safeSet(setError);
+  const safeSetPollingUrl = safeSet(setPollingUrl);
+  const safeSetGenerationId = safeSet(setGenerationId);
+  const safeSetDbEndTime = safeSet(setDbEndTime);
+
+  // Save generation record to Supabase (returns saved record or null)
   const saveGeneration = useCallback(async (apiId, pollUrl, promptText, aspect, imgs) => {
     if (!supabase) return null;
-    
+
     try {
       const payload = {
         api_id: apiId || null,
         polling_url: pollUrl || null,
         prompt: promptText,
         aspect_ratio: aspect,
-        images: imgs,
+        images: imgs || [],
       };
 
-      const { data, error } = await supabase
+      const { data, error: supabaseError } = await supabase
         .from('generations')
         .insert([payload])
         .select('id, api_id, polling_url, created_at')
         .single();
 
-      if (error) throw error;
-      return data;
+      if (supabaseError) throw supabaseError;
+      return data || null;
     } catch (e) {
-      logError(e, 'Supabase insert');
+      logError(e, 'Supabase insert (saveGeneration)');
       return null;
     }
   }, []);
 
-  const generateImages = useCallback(async (prompt, aspectRatio) => {
-    // Reset state for new generation
-    setGenerationId(null);
-    setDbEndTime(null);
-    setPollingUrl('');
-    setError(null);
-    setImages([]);
-    setLoading(true);
-    setProgress(5);
-    generationStartRef.current = Date.now();
+  // small sleep helper that listens for abort
+  const sleep = (ms, signal) => new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(new DOMException('Aborted', 'AbortError'));
+    const t = setTimeout(() => {
+      signal && signal.removeEventListener && signal.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+    function onAbort() {
+      clearTimeout(t);
+      reject(new DOMException('Aborted', 'AbortError'));
+    }
+    signal && signal.addEventListener && signal.addEventListener('abort', onAbort);
+  });
 
-    const base = import.meta.env.VITE_MJ_API_URL;
-    const queryParams = new URLSearchParams({
-      prompt: `${prompt.trim()} ${aspectRatio}`,
-      usePolling: 'true',
-    });
+  // Poll until completion or timeout. Returns the final data object on success.
+  const pollForCompletion = useCallback(async (initialPollUrl, apiId, prompt, aspectRatio) => {
+    if (!initialPollUrl) throw new Error('No polling URL provided');
 
-    const url = `${base}?${queryParams.toString()}`;
-    const controller = new AbortController();
+    const controller = abortRef.current ?? new AbortController();
     abortRef.current = controller;
+    const signal = controller.signal;
 
-    try {
-      setProgress(12);
-      const response = await fetch(url, {
-        method: 'GET',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      let apiId = data?.id ?? null;
-      let pollUrl = data?.pollingUrl || data?.polling_url || 
-                   (data?.id ? `${base}?id=${data.id}` : null);
-      
-      setPollingUrl(pollUrl || '');
-
-      // Handle immediate completion
-      if (data.status === 'completed' && Array.isArray(data.results)) {
-        setImages(data.results);
-        setProgress(100);
-        
-        try {
-          const saved = await saveGeneration(apiId, pollUrl, prompt, aspectRatio, data.results);
-          if (saved?.id) {
-            setGenerationId(saved.id);
-            if (saved.created_at) {
-              setDbEndTime(new Date(saved.created_at).getTime());
-            }
-          } else {
-            setDbEndTime(Date.now());
-          }
-        } catch (e) {
-          console.warn('Failed to save generation:', e);
-          setDbEndTime(Date.now());
-        }
-        return;
-      }
-
-      // Handle polling for incomplete requests
-      await pollForCompletion(pollUrl || `${base}?id=${data.id}`, apiId, prompt, aspectRatio);
-      
-    } catch (e) {
-      const errorInfo = handleApiError(e);
-      setError(errorInfo.message);
-      setProgress(0);
-      logError(e, 'Image generation');
-    } finally {
-      setLoading(false);
-      abortRef.current = null;
-    }
-  }, [saveGeneration]);
-
-  const pollForCompletion = useCallback(async (pollUrl, apiId, prompt, aspectRatio) => {
-    if (!pollUrl) {
-      throw new Error('No polling URL available');
-    }
-
-    const start = Date.now();
+    const startTime = Date.now();
+    let currentUrl = initialPollUrl;
     let attempts = 0;
-    let currentPollUrl = pollUrl;
 
-    while (Date.now() - start < API_CONFIG.TIMEOUT) {
-      if (abortRef.current?.signal.aborted) {
-        throw new Error('Cancelled');
-      }
+    while (Date.now() - startTime < (API_CONFIG.TIMEOUT || 5 * 60 * 1000)) {
+      if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
 
       attempts += 1;
-      setProgress(Math.min(95, 20 + attempts * 10));
+      safeSetProgress(Math.min(95, 20 + attempts * 8));
 
       try {
-        const response = await fetch(currentPollUrl, {
-          method: 'GET',
-          signal: abortRef.current?.signal,
-        });
+        const res = await fetch(currentUrl, { method: 'GET', signal });
+        if (!res.ok) throw new Error(`Polling HTTP ${res.status}: ${res.statusText}`);
 
-        if (!response.ok) {
-          throw new Error(`Polling HTTP ${response.status}: ${response.statusText}`);
-        }
+        const data = await res.json();
 
-        const data = await response.json();
-
-        // Update API ID and polling URL if provided
+        // update apiId and polling url if returned
         apiId = apiId || data?.id || null;
         if (data?.pollingUrl || data?.polling_url) {
-          currentPollUrl = data.pollingUrl || data.polling_url;
-          setPollingUrl(currentPollUrl);
+          currentUrl = data.pollingUrl || data.polling_url;
+          safeSetPollingUrl(currentUrl);
         }
 
-        // Check for completion
-        if (data.status === 'completed' && Array.isArray(data.results) && data.results.length > 0) {
-          setImages(data.results);
-          setProgress(100);
-          
-          try {
-            const saved = await saveGeneration(apiId, currentPollUrl, prompt, aspectRatio, data.results);
-            if (saved?.id) {
-              setGenerationId(saved.id);
-              if (saved.created_at) {
-                setDbEndTime(new Date(saved.created_at).getTime());
-              }
-            } else {
-              setDbEndTime(Date.now());
-            }
-          } catch (e) {
-            console.warn('Failed to save generation:', e);
-            setDbEndTime(Date.now());
+        // Completed
+        if (data?.status === 'completed' && Array.isArray(data.results) && data.results.length > 0) {
+          safeSetImages(data.results);
+          safeSetProgress(100);
+
+          const saved = await saveGeneration(apiId, currentUrl, prompt, aspectRatio, data.results);
+          if (saved?.id) {
+            safeSetGenerationId(saved.id);
+            if (saved.created_at) safeSetDbEndTime(new Date(saved.created_at).getTime());
+            else safeSetDbEndTime(Date.now());
+          } else {
+            safeSetDbEndTime(Date.now());
           }
-          return;
+
+          return data;
         }
 
-        // Check for failure
-        if (data.status === 'failed' || data.status === 'error') {
-          throw new Error(data.message || 'Generation failed');
+        // Failure reported by API
+        if (data?.status === 'failed' || data?.status === 'error') {
+          const msg = data?.message || 'Generation failed';
+          throw new Error(msg);
         }
 
-        // Update polling URL if changed
-        if (data.pollingUrl) currentPollUrl = data.pollingUrl;
-        if (data.polling_url) currentPollUrl = data.polling_url;
+        // allow pollUrl updates in response
+        if (data?.pollingUrl) currentUrl = data.pollingUrl;
+        if (data?.polling_url) currentUrl = data.polling_url;
 
-        // Wait before next poll
-        await new Promise(resolve => setTimeout(resolve, API_CONFIG.POLLING_INTERVAL));
-        
-      } catch (e) {
-        if (e.name === 'AbortError') {
-          throw e;
-        }
-        logError(e, 'Polling');
-        // Continue polling on network errors
-        await new Promise(resolve => setTimeout(resolve, API_CONFIG.POLLING_INTERVAL));
+        // wait before next poll (respects abort)
+        await sleep(API_CONFIG.POLLING_INTERVAL || 1500, signal);
+      } catch (err) {
+        if (err.name === 'AbortError' || err.code === 'AbortError') throw err;
+        // Log and keep polling for transient network errors
+        logError(err, 'pollForCompletion');
+        // small backoff before retrying
+        await sleep(API_CONFIG.POLLING_INTERVAL || 1500, signal).catch(() => { throw new DOMException('Aborted', 'AbortError'); });
       }
     }
 
-    throw new Error('Generation timed out after 5 minutes');
+    throw new Error('Generation timed out');
   }, [saveGeneration]);
+
+  // Start a new generation flow
+  const generateImages = useCallback(async (prompt, aspectRatio) => {
+    // reset state
+    safeSetError(null);
+    safeSetImages([]);
+    safeSetGenerationId(null);
+    safeSetDbEndTime(null);
+    safeSetPollingUrl('');
+
+    safeSetLoading(true);
+    generationStartRef.current = Date.now();
+    safeSetProgress(5);
+
+    const base = import.meta.env.VITE_MJ_API_URL;
+    if (!base) {
+      safeSetError('Missing generation API URL');
+      safeSetLoading(false);
+      return;
+    }
+
+    // Build query parameters
+    const query = new URLSearchParams({ prompt: `${prompt.trim()} ${aspectRatio}`, usePolling: 'true' });
+    const url = `${base}?${query.toString()}`;
+
+    // setup AbortController for this request (replaces any existing)
+    try {
+      if (abortRef.current) {
+        try { abortRef.current.abort(); } catch (e) { /* noop */ }
+        abortRef.current = null;
+      }
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const signal = controller.signal;
+
+      safeSetProgress(12);
+
+      const response = await fetch(url, { method: 'GET', signal });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+      const data = await response.json();
+
+      // determine pollingUrl / apiId
+      let apiId = data?.id ?? null;
+      const pollUrl = data?.pollingUrl || data?.polling_url || (data?.id ? `${base}?id=${data.id}` : null);
+      safeSetPollingUrl(pollUrl || '');
+
+      // immediate completed response
+      if (data?.status === 'completed' && Array.isArray(data.results)) {
+        safeSetImages(data.results);
+        safeSetProgress(100);
+
+        const saved = await saveGeneration(apiId, pollUrl, prompt, aspectRatio, data.results);
+        if (saved?.id) {
+          safeSetGenerationId(saved.id);
+          if (saved.created_at) safeSetDbEndTime(new Date(saved.created_at).getTime());
+          else safeSetDbEndTime(Date.now());
+        } else {
+          safeSetDbEndTime(Date.now());
+        }
+
+        return data;
+      }
+
+      // else poll until completed
+      await pollForCompletion(pollUrl || `${base}?id=${data?.id}`, apiId, prompt, aspectRatio);
+
+    } catch (e) {
+      const info = handleApiError(e);
+      safeSetError(info.message || 'Generation failed');
+      safeSetProgress(0);
+      logError(e, 'generateImages');
+      // if aborted, leave loading false in finalizer
+      if (e.name === 'AbortError') {
+        // cancelled by user
+      }
+    } finally {
+      // finalize only if mounted
+      safeSetLoading(false);
+      // keep abortRef for possible reuse; clear it if aborted
+      if (abortRef.current?.signal?.aborted) {
+        abortRef.current = null;
+      }
+    }
+  }, [pollForCompletion, saveGeneration]);
 
   const cancelGeneration = useCallback(() => {
     if (abortRef.current) {
-      abortRef.current.abort();
+      try { abortRef.current.abort(); } catch (e) { /* noop */ }
+      abortRef.current = null;
     }
+    safeSetLoading(false);
+    safeSetProgress(0);
   }, []);
 
   const resetGeneration = useCallback(() => {
     cancelGeneration();
-    setError(null);
-    setProgress(0);
-    setLoading(false);
-    setImages([]);
-    setGenerationId(null);
-    setDbEndTime(null);
-    setPollingUrl('');
+    safeSetError(null);
+    safeSetProgress(0);
+    safeSetLoading(false);
+    safeSetImages([]);
+    safeSetGenerationId(null);
+    safeSetDbEndTime(null);
+    safeSetPollingUrl('');
   }, [cancelGeneration]);
 
   return {
-    // State
+    // state
     loading,
     progress,
     images,
@@ -226,11 +286,11 @@ export const useImageGeneration = () => {
     generationId,
     dbEndTime,
     generationStartTime: generationStartRef.current,
-    
-    // Actions
+
+    // actions
     generateImages,
     cancelGeneration,
     resetGeneration,
-    setError,
+    setError: safeSetError,
   };
 };
