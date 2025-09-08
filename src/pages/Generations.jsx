@@ -349,7 +349,7 @@ const ImagePreview = React.memo(({ generation, src, onClose }) => {
   );
 });
 
-export default function Generations() {
+const Generations = React.memo(function Generations() {
   const navigate = useNavigate();
   const [savedGenerations, setSavedGenerations] = useState([]);
   const [preview, setPreview] = useState(null);
@@ -408,12 +408,12 @@ export default function Generations() {
         images: newGeneration.images || [],
       };
       
-      // Add to toast notification
-      setToast(`New generation by ${newGeneration.prompt.substring(0, 50)}...`);
-      
       // Return new array with the new generation at the beginning
       return [sanitized, ...prev];
     });
+    
+    // Add to toast notification - moved outside setState to prevent unnecessary re-renders
+    setToast(`New generation by ${newGeneration.prompt.substring(0, 50)}...`);
   }, []);
 
   // Handle Realtime updates for deleted generations
@@ -468,23 +468,30 @@ export default function Generations() {
     [loadGenerations]
   );
 
+  // Memoize date formatter to avoid recreating it on each render
+  const dateFormatter = useMemo(() => {
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }, []);
+  
   const groupedGenerations = useMemo(() => {
     const groups = savedGenerations.reduce((acc, generation) => {
-      const date = new Date(generation.created_at).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
+      const date = dateFormatter.format(new Date(generation.created_at));
       if (!acc[date]) acc[date] = [];
       acc[date].push(generation);
       return acc;
     }, {});
     return Object.entries(groups);
-  }, [savedGenerations]);
+  }, [savedGenerations, dateFormatter]);
 
-  const handlePreview = (generation, src) => setPreview({ generation, src });
+  const handlePreview = useCallback((generation, src) => {
+    setPreview({ generation, src });
+  }, []);
 
-  const handleBackClick = () => {
+  const handleBackClick = useCallback(() => {
     if (backButtonRef.current) {
       gsap.to(backButtonRef.current, {
         scale: 0.95,
@@ -495,7 +502,7 @@ export default function Generations() {
       });
     }
     navigate(-1);
-  };
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white">
@@ -527,38 +534,31 @@ export default function Generations() {
             </button>
           </div>
 
-          {savedGenerations.length > 0 && (
-            <p className="text-sm text-neutral-400">
-              <i className="ri-arrow-right-circle-fill md:mr-2 mr-1"></i>
-              {savedGenerations.length} generation
-              {savedGenerations.length !== 1 ? "s" : ""} total
-              <i className="ri-arrow-right-long-line md:mx-2 mx-1"></i>
-              {
-                savedGenerations.filter((gen) => {
-                  const created = new Date(gen.created_at);
-                  const today = new Date();
-                  return (
-                    created.getDate() === today.getDate() &&
-                    created.getMonth() === today.getMonth() &&
-                    created.getFullYear() === today.getFullYear()
-                  );
-                }).length
-              }{" "}
-              generation
-              {savedGenerations.filter((gen) => {
-                const created = new Date(gen.created_at);
-                const today = new Date();
-                return (
-                  created.getDate() === today.getDate() &&
-                  created.getMonth() === today.getMonth() &&
-                  created.getFullYear() === today.getFullYear()
-                );
-              }).length !== 1
-                ? "s"
-                : ""}{" "}
-              today
-            </p>
-          )}
+          {savedGenerations.length > 0 && (() => {
+            // Calculate today's generations count once instead of twice
+            const today = new Date();
+            const todayGenerations = savedGenerations.filter((gen) => {
+              const created = new Date(gen.created_at);
+              return (
+                created.getDate() === today.getDate() &&
+                created.getMonth() === today.getMonth() &&
+                created.getFullYear() === today.getFullYear()
+              );
+            }).length;
+            
+            return (
+              <p className="text-sm text-neutral-400">
+                <i className="ri-arrow-right-circle-fill md:mr-2 mr-1"></i>
+                {savedGenerations.length} generation
+                {savedGenerations.length !== 1 ? "s" : ""} total
+                <i className="ri-arrow-right-long-line md:mx-2 mx-1"></i>
+                {todayGenerations}{" "}
+                generation
+                {todayGenerations !== 1 ? "s" : ""}{" "}
+                today
+              </p>
+            );
+          })()}
         </div>
 
         {/* Error */}
@@ -647,4 +647,6 @@ export default function Generations() {
       </main>
     </div>
   );
-}
+});
+
+export default Generations;
