@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../lib/supabaseClient";
-import { useSupabaseRealtime } from "../hooks/useSupabaseRealtime";
 import Toast from "../components/Toast";
 import ConfirmationModal from "../components/ConfirmationModal";
 
@@ -355,10 +354,7 @@ const Generations = React.memo(function Generations() {
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
   const [showPolling, setShowPolling] = useState(false);
-  const [realtimeUpdates, setRealtimeUpdates] = useState([]);
   const backButtonRef = useRef(null);
-
-  // Realtime presence tracking removed
 
   const [confirmModal, setConfirmModal] = useState({
     open: false,
@@ -394,41 +390,6 @@ const Generations = React.memo(function Generations() {
     }
   }, []);
 
-  // Handle Realtime updates for new generations
-  const handleGenerationCreated = useCallback((newGeneration) => {
-    console.log('New generation received via Realtime:', newGeneration);
-    
-    // Add the new generation to the beginning of the list
-    setSavedGenerations(prev => {
-      const sanitized = {
-        ...newGeneration,
-        images: newGeneration.images || [],
-      };
-      
-      // Return new array with the new generation at the beginning
-      return [sanitized, ...prev];
-    });
-    
-    // Add to toast notification - moved outside setState to prevent unnecessary re-renders
-    setToast(`New generation by ${newGeneration.prompt.substring(0, 50)}...`);
-  }, []);
-
-  // Handle Realtime updates for deleted generations
-  const handleGenerationDeleted = useCallback((deletedGeneration) => {
-    console.log('Generation deleted via Realtime:', deletedGeneration);
-    
-    // Remove the deleted generation from the list
-    setSavedGenerations(prev => prev.filter(gen => gen.id !== deletedGeneration.id));
-    
-    // Add to toast notification
-    setToast('Generation deleted by another user');
-  }, []);
-
-  // Setup Realtime subscription
-  const { isConnected, connectionError } = useSupabaseRealtime(
-    handleGenerationCreated,
-    handleGenerationDeleted
-  );
 
   useEffect(() => {
     loadGenerations();
@@ -509,18 +470,6 @@ const Generations = React.memo(function Generations() {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <h1 className="text-xl text-neutral-400">Saved Generations</h1>
-              {isConnected && (
-                <div className="flex items-center gap-1 text-emerald-400 text-sm">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                  <span>Live</span>
-                </div>
-              )}
-              {connectionError && (
-                <div className="flex items-center gap-1 text-red-400 text-sm">
-                  <i className="ri-error-warning-line"></i>
-                  <span>Disconnected</span>
-                </div>
-              )}
             </div>
             <button
               ref={backButtonRef}
