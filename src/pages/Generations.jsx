@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../lib/supabaseClient";
 import { useSupabaseRealtime } from "../hooks/useSupabaseRealtime";
-import { useSupabasePresence } from "../hooks/useSupabasePresence";
-import ActiveUsersIndicator from "../components/ActiveUsersIndicator";
 import Toast from "../components/Toast";
 import ConfirmationModal from "../components/ConfirmationModal";
 
@@ -360,8 +358,7 @@ const Generations = React.memo(function Generations() {
   const [realtimeUpdates, setRealtimeUpdates] = useState([]);
   const backButtonRef = useRef(null);
 
-  // Setup Realtime presence tracking
-  const { activeUsers, isTracking: isPresenceTracking, presenceError: presenceError } = useSupabasePresence('generations-room');
+  // Realtime presence tracking removed
 
   const [confirmModal, setConfirmModal] = useState({
     open: false,
