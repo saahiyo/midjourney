@@ -8,6 +8,7 @@ import Generations from './pages/Generations'
 import Layout from './components/Layout'
 import LoginForm from './components/LoginForm'
 import SignupForm from './components/SignupForm'
+import AuthGuard from './components/AuthGuard'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -18,8 +19,16 @@ createRoot(document.getElementById('root')).render(
             <Route index element={<App />} />
             <Route path="generations" element={<Generations />} />
           </Route>
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/signup" element={<SignupForm />} />
+          <Route path="/login" element={
+            <AuthGuard>
+              <LoginForm />
+            </AuthGuard>
+          } />
+          <Route path="/signup" element={
+            <AuthGuard>
+              <SignupForm />
+            </AuthGuard>
+          } />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

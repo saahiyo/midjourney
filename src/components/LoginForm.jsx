@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -7,6 +8,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { signIn } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,6 +18,8 @@ export default function LoginForm() {
     try {
       const { error } = await signIn(email, password);
       if (error) throw error;
+      // Redirect to main page after successful login
+      navigate('/');
     } catch (error) {
       setError(error.message || 'Login failed');
     } finally {
