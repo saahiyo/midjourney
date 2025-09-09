@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { getAdminDisplayName } from "../utils/admin";
+import UserProfile from "./UserProfile"; // Import UserProfile component
 
 export default function Header({ user, isAdmin, onNav }) {
   const navigate = useNavigate();
@@ -61,11 +62,7 @@ export default function Header({ user, isAdmin, onNav }) {
                 <span className="hidden md:inline">View Generations</span>
                 <i className="ri-arrow-right-line ml-2"></i>
               </button>
-              <div className="relative">
-                <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white font-medium text-sm cursor-pointer hover:bg-emerald-700 transition-colors">
-                  {user.email?.charAt(0).toUpperCase()}
-                </div>
-              </div>
+              <UserProfile />
             </>
           )}
         </div>

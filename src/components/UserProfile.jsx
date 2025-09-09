@@ -20,7 +20,7 @@ export default function UserProfile() {
           {user?.email?.[0]?.toUpperCase() || 'U'}
         </div>
         <span className="text-sm text-neutral-300 hidden md:inline">
-          {user?.email || 'User'}
+          {user?.email?.split('@') || 'User'}
         </span>
         <i className="ri-arrow-down-s-line text-neutral-400"></i>
       </button>
@@ -28,7 +28,7 @@ export default function UserProfile() {
       {isDropdownOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-neutral-900 rounded-lg shadow-lg border border-neutral-800 z-50">
           <div className="p-4 border-b border-neutral-800">
-            <p className="text-sm font-medium text-neutral-300">{user?.email}</p>
+            <p className="text-sm font-medium text-neutral-300">{user?.email?.split('@')}</p>
             <p className="text-xs text-neutral-500">Free Account</p>
           </div>
           <button
