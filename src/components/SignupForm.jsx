@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 
-export default function SignupForm() {
+export default function SignupForm(props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { signUp } = useAuth();
+  const onSignupSuccess = props.onSignupSuccess;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,6 +30,10 @@ export default function SignupForm() {
     try {
       const { error } = await signUp(email, password);
       if (error) throw error;
+      // Call onSignupSuccess callback if provided
+      if (onSignupSuccess) {
+        onSignupSuccess();
+      }
     } catch (error) {
       setError(error.message || 'Signup failed');
     } finally {

@@ -7,7 +7,7 @@ import App from './App.jsx'
 import Generations from './pages/Generations'
 import Layout from './components/Layout'
 import LoginForm from './components/LoginForm'
-import SignupForm from './components/SignupForm'
+import Signup from './pages/Signup'
 import AuthGuard from './components/AuthGuard'
 
 createRoot(document.getElementById('root')).render(
@@ -26,7 +26,7 @@ createRoot(document.getElementById('root')).render(
           } />
           <Route path="/signup" element={
             <AuthGuard>
-              <SignupForm />
+              <Signup />
             </AuthGuard>
           } />
         </Routes>

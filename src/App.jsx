@@ -6,6 +6,7 @@ import "./index.css";
 import { useImageGeneration } from "./hooks/useImageGeneration";
 import { usePromptForm } from "./hooks/usePromptForm";
 import { useImagePreview } from "./hooks/useImagePreview";
+import { useAuth } from "./hooks/useAuth.jsx";
 import PromptForm from "./components/PromptForm";
 import ImageGallery from "./components/ImageGallery";
 import ImagePreviewModal from "./components/ImagePreviewModal";
@@ -20,6 +21,7 @@ import { logEnvironmentStatus } from "./utils/envValidation";
 const App = () => {
   const navigate = useNavigate();
   const appRef = useRef(null);
+  const { user } = useAuth();
   
   // Custom hooks
   const {
@@ -94,6 +96,12 @@ const App = () => {
 
   // Event handlers
   const handleGenerate = async () => {
+    if (!user) {
+      setError("Please sign in to generate images.");
+      trackError('auth_required', 'User not authenticated');
+      return;
+    }
+
     if (!isPromptValid) {
       setError("Please enter a valid prompt.");
       trackError('validation', 'Invalid prompt');
