@@ -47,6 +47,9 @@ export const useImageGeneration = () => {
   // Save generation record
   const saveGeneration = useCallback(async (apiId, pollUrl, promptText, aspect, imgs) => {
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { data, error: supabaseError } = await supabase
         .from("generations")
         .insert([{
@@ -55,6 +58,7 @@ export const useImageGeneration = () => {
           prompt: promptText,
           aspect_ratio: aspect,
           images: imgs || [],
+          user_id: user?.id,
         }])
         .select("id, created_at")
         .single();

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../hooks/useAuth.jsx";
 import Toast from "../components/Toast";
 import ConfirmationModal from "../components/ConfirmationModal";
 
@@ -348,6 +349,7 @@ const ImagePreview = React.memo(({ generation, src, onClose }) => {
 
 const Generations = React.memo(function Generations() {
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const [savedGenerations, setSavedGenerations] = useState([]);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -368,12 +370,21 @@ const Generations = React.memo(function Generations() {
     setError(null);
 
     try {
-      const { data, error } = await supabase
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      let query = supabase
         .from("generations")
         .select(
-          "id, api_id, polling_url, prompt, aspect_ratio, images, created_at"
-        )
-        .order("created_at", { ascending: false });
+          "id, api_id, polling_url, prompt, aspect_ratio, images, created_at, user_id"
+        );
+      
+      // Admin users can see all generations, regular users only see their own
+      if (!isAdmin) {
+        query = query.eq('user_id', user?.id);
+      }
+      
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
 
@@ -388,7 +399,7 @@ const Generations = React.memo(function Generations() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAdmin]);
 
 
   useEffect(() => {
@@ -469,7 +480,14 @@ const Generations = React.memo(function Generations() {
         <div className="w-full mb-6 border-b border-neutral-800 pb-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl text-neutral-400">Saved Generations</h1>
+              <h1 className="text-xl text-neutral-400">
+                {isAdmin ? "All Generations" : "Saved Generations"}
+                {isAdmin && (
+                  <span className="ml-2 px-2 py-1 text-xs bg-purple-900 text-purple-300 rounded-full">
+                    Admin
+                  </span>
+                )}
+              </h1>
             </div>
             <button
               ref={backButtonRef}
@@ -502,6 +520,12 @@ const Generations = React.memo(function Generations() {
                 generation
                 {todayGenerations !== 1 ? "s" : ""}{" "}
                 today
+                {isAdmin && (
+                  <>
+                    <i className="ri-arrow-right-long-line md:mx-2 mx-1"></i>
+                    <span className="text-purple-400">Admin View</span>
+                  </>
+                )}
               </p>
             );
           })()}

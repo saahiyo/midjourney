@@ -40,3 +40,8 @@ export const ERROR_MESSAGES = {
   CANCELLED: 'Request was cancelled.',
   UNKNOWN: 'An unexpected error occurred. Please try again.',
 };
+
+// Admin configuration
+export const ADMIN_CONFIG = {
+  EMAIL: import.meta.env.VITE_ADMIN_EMAIL,
+};
