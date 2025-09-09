@@ -31,12 +31,10 @@ export const useImageGeneration = () => {
     };
   }, []);
 
-  // Helper: safe setState only if mounted
-  const safeSet =
-    (setter) =>
-    (...args) => {
-      if (mountedRef.current) setter(...args);
-    };
+  // safe setState wrapper
+  const safeSet = (setter) => (...args) => {
+    if (mountedRef.current) setter(...args);
+  };
 
   const safeSetLoading = safeSet(setLoading);
   const safeSetProgress = safeSet(setProgress);
@@ -47,38 +45,32 @@ export const useImageGeneration = () => {
   const safeSetDbEndTime = safeSet(setDbEndTime);
 
   // Save generation record
-  const saveGeneration = useCallback(
-    async (apiId, pollUrl, promptText, aspect, imgs) => {
-      try {
-        const { data, error: supabaseError } = await supabase
-          .from("generations")
-          .insert([
-            {
-              api_id: apiId || null,
-              polling_url: pollUrl || null,
-              prompt: promptText,
-              aspect_ratio: aspect,
-              images: imgs || [],
-            },
-          ])
-          .select("id, created_at")
-          .single();
+  const saveGeneration = useCallback(async (apiId, pollUrl, promptText, aspect, imgs) => {
+    try {
+      const { data, error: supabaseError } = await supabase
+        .from("generations")
+        .insert([{
+          api_id: apiId || null,
+          polling_url: pollUrl || null,
+          prompt: promptText,
+          aspect_ratio: aspect,
+          images: imgs || [],
+        }])
+        .select("id, created_at")
+        .single();
 
-        if (supabaseError) throw supabaseError;
-        return data || null;
-      } catch (e) {
-        logError(e, "Supabase insert (saveGeneration)");
-        return null;
-      }
-    },
-    []
-  );
+      if (supabaseError) throw supabaseError;
+      return data || null;
+    } catch (e) {
+      logError(e, "Supabase insert (saveGeneration)");
+      return null;
+    }
+  }, []);
 
   // Sleep helper
   const sleep = (ms, signal) =>
     new Promise((resolve, reject) => {
-      if (signal?.aborted)
-        return reject(new DOMException("Aborted", "AbortError"));
+      if (signal?.aborted) return reject(new DOMException("Aborted", "AbortError"));
       const t = setTimeout(resolve, ms);
       signal?.addEventListener("abort", () => {
         clearTimeout(t);
@@ -87,109 +79,99 @@ export const useImageGeneration = () => {
     });
 
   // Poll until completion
-  const pollForCompletion = useCallback(
-    async (pollUrl, apiId, prompt, aspectRatio) => {
-      if (!pollUrl) throw new Error("No polling URL provided");
+  const pollForCompletion = useCallback(async (pollUrl, apiId, prompt, aspectRatio) => {
+    if (!pollUrl) throw new Error("No polling URL provided");
 
-      const controller = abortRef.current ?? new AbortController();
-      abortRef.current = controller;
-      const signal = controller.signal;
+    const controller = abortRef.current || new AbortController();
+    abortRef.current = controller;
+    const signal = controller.signal;
 
-      const start = Date.now();
-      let attempts = 0;
+    const start = Date.now();
+    let attempts = 0;
 
-      while (Date.now() - start < (API_CONFIG.TIMEOUT || 5 * 60 * 1000)) {
-        if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    while (Date.now() - start < (API_CONFIG.TIMEOUT || 5 * 60 * 1000)) {
+      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
 
-        attempts++;
-        safeSetProgress(Math.min(95, 20 + attempts * 8));
-
-        try {
-          const res = await fetch(pollUrl, { method: "GET", signal });
-          if (!res.ok) throw new Error(`Polling HTTP ${res.status}`);
-
-          const data = await res.json();
-
-          if (data?.status === "completed" && Array.isArray(data.results)) {
-            safeSetImages(data.results);
-            safeSetProgress(100);
-
-            const saved = await saveGeneration(
-              apiId,
-              pollUrl,
-              prompt,
-              aspectRatio,
-              data.results
-            );
-            if (saved?.id) {
-              safeSetGenerationId(saved.id);
-              safeSetDbEndTime(new Date(saved.created_at).getTime());
-            } else {
-              safeSetDbEndTime(Date.now());
-            }
-            return data;
-          }
-
-          if (data?.status === "failed" || data?.status === "error") {
-            throw new Error(data?.message || "Generation failed");
-          }
-
-          await sleep(API_CONFIG.POLLING_INTERVAL || 1500, signal);
-        } catch (err) {
-          if (err.name === "AbortError") throw err;
-          logError(err, "pollForCompletion");
-          await sleep(API_CONFIG.POLLING_INTERVAL || 1500, signal);
-        }
-      }
-      throw new Error("Generation timed out");
-    },
-    [saveGeneration]
-  );
-
-  // Start generation flow
-  const generateImages = useCallback(
-    async (prompt, aspectRatio) => {
-      safeSetError(null);
-      safeSetImages([]);
-      safeSetGenerationId(null);
-      safeSetDbEndTime(null);
-      safeSetPollingUrl("");
-
-      safeSetLoading(true);
-      generationStartRef.current = Date.now();
-      safeSetProgress(5);
+      attempts++;
+      safeSetProgress(Math.min(95, 20 + attempts * 8));
 
       try {
-        // Call Edge Function (instead of hitting API directly)
-        const response = await fetch(`${supabase.functionsUrl}/mj-gen-images`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${supabase.supabaseKey}`, // add this
-          },
-          body: JSON.stringify({ prompt, aspectRatio }),
-        });
+        const res = await fetch(pollUrl, { method: "GET", signal });
+        if (!res.ok) throw new Error(`Polling HTTP ${res.status}`);
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        if (!data.success)
-          throw new Error(data.error || "Failed to start generation");
+        const data = await res.json();
 
-        safeSetPollingUrl(data.pollingUrl || "");
-        safeSetProgress(15);
+        if (data?.status === "completed" && Array.isArray(data.results)) {
+          safeSetImages(data.results);
+          safeSetProgress(100);
 
-        await pollForCompletion(data.pollingUrl, data.id, prompt, aspectRatio);
-      } catch (e) {
-        const info = handleApiError(e);
-        safeSetError(info.message || "Generation failed");
-        safeSetProgress(0);
-        logError(e, "generateImages");
-      } finally {
-        safeSetLoading(false);
+          const saved = await saveGeneration(apiId, pollUrl, prompt, aspectRatio, data.results);
+          if (saved?.id) {
+            safeSetGenerationId(saved.id);
+            safeSetDbEndTime(new Date(saved.created_at).getTime());
+          } else {
+            safeSetDbEndTime(Date.now());
+          }
+          return data;
+        }
+
+        if (data?.status === "failed" || data?.status === "error") {
+          throw new Error(data?.message || "Generation failed");
+        }
+
+        await sleep(API_CONFIG.POLLING_INTERVAL || 1500, signal);
+      } catch (err) {
+        if (err.name === "AbortError") throw err;
+        logError(err, "pollForCompletion");
+        await sleep(API_CONFIG.POLLING_INTERVAL || 1500, signal);
       }
-    },
-    [pollForCompletion]
-  );
+    }
+
+    throw new Error("Generation timed out");
+  }, [saveGeneration]);
+
+  // Start generation
+  const generateImages = useCallback(async (prompt, aspectRatio) => {
+    safeSetError(null);
+    safeSetImages([]);
+    safeSetGenerationId(null);
+    safeSetDbEndTime(null);
+    safeSetPollingUrl("");
+
+    safeSetLoading(true);
+    generationStartRef.current = Date.now();
+    safeSetProgress(5);
+
+    try {
+      const response = await fetch(`${supabase.functionsUrl}/mj-gen-images`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${supabase.supabaseKey}`,
+        },
+        body: JSON.stringify({ prompt, aspectRatio }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data?.success) {
+        const errInfo = data?.error?.message || data?.error?.code || `HTTP ${response.status}`;
+        throw new Error(errInfo);
+      }
+
+      safeSetPollingUrl(data.pollingUrl || "");
+      safeSetProgress(15);
+
+      await pollForCompletion(data.pollingUrl, data.id, prompt, aspectRatio);
+    } catch (e) {
+      const info = handleApiError(e);
+      safeSetError(info.message || "Generation failed");
+      safeSetProgress(0);
+      logError(e, "generateImages");
+    } finally {
+      safeSetLoading(false);
+    }
+  }, [pollForCompletion]);
 
   const cancelGeneration = useCallback(() => {
     if (abortRef.current) {
