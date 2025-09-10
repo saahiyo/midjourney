@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.jsx";
 
 export default function SignupForm({ onSignupSuccess }) {
@@ -160,12 +161,9 @@ export default function SignupForm({ onSignupSuccess }) {
         {/* Footer */}
         <div className="mt-6 text-center text-sm text-neutral-400">
           Already have an account?{" "}
-          <button
-            onClick={() => (window.location.href = "/login")}
-            className="text-emerald-500 hover:text-emerald-400 font-medium"
-          >
+          <Link to="/login" className="text-emerald-500 hover:text-emerald-400 font-medium">
             Sign in
-          </button>
+          </Link>
         </div>
       </div>
     </div>

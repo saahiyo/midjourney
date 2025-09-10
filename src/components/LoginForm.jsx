@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../hooks/useAuth.jsx";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -122,12 +122,9 @@ export default function LoginForm() {
         {/* Footer */}
         <div className="mt-6 text-center text-sm text-neutral-400">
           Don’t have an account?{" "}
-          <button
-            onClick={() => (window.location.href = "/signup")}
-            className="text-emerald-500 hover:text-emerald-400 font-medium"
-          >
+          <Link to="/signup" className="text-emerald-500 hover:text-emerald-400 font-medium">
             Sign up
-          </button>
+          </Link>
         </div>
       </div>
     </div>
