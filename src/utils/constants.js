@@ -43,5 +43,5 @@ export const ERROR_MESSAGES = {
 
 // Admin configuration
 export const ADMIN_CONFIG = {
-  EMAIL: import.meta.env.VITE_ADMIN_EMAIL || 'ADMIN_EMAIL',
+  EMAIL: (import.meta.env.VITE_ADMIN_EMAIL || "").toLowerCase().trim(),
 };
