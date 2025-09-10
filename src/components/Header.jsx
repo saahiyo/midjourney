@@ -20,11 +20,11 @@ export default function Header({ user, isAdmin, onNav }) {
         <div className="flex items-center gap-3">
           <i className="ri-bard-fill text-2xl md:text-3xl text-emerald-500"></i>
           <div className="flex items-center gap-2">
-            <a href="/">
+            <button onClick={() => handleNavigate("/")}>
               <h1 className="md:text-4xl text-2xl text-emerald-500 font-semibold tracking-wider">
                 MidJourney
               </h1>
-            </a>
+            </button>
             {isAdmin && (
               <span className="px-2 py-1 text-xs bg-purple-900 text-purple-300 rounded-full font-medium">
                 {getAdminDisplayName()}
