@@ -274,7 +274,7 @@ const PromptForm = memo(({
           ref={generateButtonRef}
           onClick={handleGenerateClick}
           disabled={loading || !isPromptValid}
-          className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-3 rounded-lg shadow-md flex items-center gap-2"
+          className="flex-1 bg-emerald-600 hover:bg-emerald-700  disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-3 rounded-lg shadow-md flex items-center gap-2"
           aria-label={loading ? "Generating images..." : "Generate images"}
         >
           <i className="ri-image-ai-line" aria-hidden="true"></i>

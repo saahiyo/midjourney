@@ -74,7 +74,7 @@ const ImageGallery = memo(({
       <div className="col-span-1 sm:col-span-2 p-6 flex text-neutral-400 rounded-lg shadow-sm items-center justify-center h-full">
         {loading ? (
           <div className="w-full relative">
-            <div className="w-full bg-neutral-800 rounded-full h-3 overflow-hidden shadow-inner">
+            <div className="w-full rounded-full h-3 overflow-hidden shadow-inner">
               <div
                 className="h-3 bg-emerald-500 transition-all duration-300"
                 style={{ width: `${progress}%` }}

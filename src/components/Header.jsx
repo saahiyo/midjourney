@@ -68,7 +68,7 @@ export default function Header({ user, isAdmin, onNav }) {
         </div>
       </div>
       <p className="text-sm md:text-base text-neutral-400 mt-2 tracking-tighter">
-        Generate stunning <span className="text-emerald-500/70 font-semibold">images</span> with a sleek and modern interface.
+        Generate stunning <span className="text-emerald-500/70 font-semibold font-montserrat">images</span> with a sleek and modern interface.
       </p>
     </header>
   );

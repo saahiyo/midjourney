@@ -67,7 +67,7 @@ export default function Toast({
       ref={toastRef}
       role="status"
       aria-live="polite"
-      className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-2 rounded-full shadow-lg border text-sm ${variantStyles[variant]}`}
+      className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-2 rounded-full shadow-lg text-md ${variantStyles[variant]}`}
     >
       <span className="flex-1">{message}</span>
       <button

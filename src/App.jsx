@@ -142,9 +142,9 @@ const App = () => {
           element={
             <div
               ref={appRef}
-              className="bg-neutral-950 min-h-screen text-white"
+              className=" md:min-h-auto min-h-screen text-white"
             >
-              <main className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+              <main className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 font-inter">
                 <PromptForm
                   prompt={prompt}
                   promptRef={promptRef}

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
 /* Custom scrollbar - global, cross-browser */
@@ -6,18 +8,38 @@
 	--scrollbar-thumb: rgba(0,0,0,0.35);
 	--scrollbar-thumb-hover: rgba(0,0,0,0.5);
 	--scrollbar-width: 12px;
+	--bg-background-color: #070708;
+	--bg-foreground-color: #101011;
 }
 
 html {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: rgb(22, 163, 74, 0.2) #0a0a0a; /* thumb color | track color */
+  scrollbar-width: thin; 
+  scrollbar-color: rgb(22, 163, 74, 0.2) #0a0a0a; 
+}
+body {
+	background-color: #0a0a0a;
 }
 
-/* Firefox */
-* {
-	scrollbar-width: thin; /* auto | thin | none */
-	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+@theme {
+	--font-inter: "Inter", sans-serif;
+	--font-montserrat: "Montserrat", sans-serif;
+	--bg-background-color: var(--bg-background-color);
+	--bg-foreground-color: var(--bg-foreground-color);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* WebKit (Chrome, Edge, Safari) */
 *::-webkit-scrollbar {
@@ -52,7 +74,3 @@ html {
 	display: none;
 }
 
-/* Small tweak for reduced motion / small screens */
-@media (max-width: 640px) {
-	:root { --scrollbar-width: 8px; }
-}
