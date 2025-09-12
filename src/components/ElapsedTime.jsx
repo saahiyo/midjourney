@@ -35,7 +35,7 @@ export default function ElapsedTime({ startTime, endTime, intervalMs = 1000 }) {
   if (!startTime) return null;
 
   return (
-    <p className="text-xs text-neutral-400" aria-live="polite">
+    <p className="text-xs text-gray-400" aria-live="polite">
       <i className="ri-timer-line"></i> Elapsed: {formatted}
     </p>
   );

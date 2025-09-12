@@ -71,7 +71,7 @@ const ImageGallery = memo(({
 
   if (displayImages.length === 0) {
     return (
-      <div className="col-span-1 sm:col-span-2 p-6 flex text-neutral-400 rounded-lg shadow-sm items-center justify-center h-full">
+      <div className="col-span-1 sm:col-span-2 p-6 flex text-gray-400 rounded-lg shadow-sm items-center justify-center h-full">
         {loading ? (
           <div className="w-full relative">
             <div className="w-full rounded-full h-3 overflow-hidden shadow-inner">
@@ -88,17 +88,17 @@ const ImageGallery = memo(({
             <div className="absolute left-0 top-0 w-full h-3 pointer-events-none">
               <div
                 style={{ left: `${progressPosition}%` }}
-                className="absolute -translate-x-1/2 -translate-y-6 text-xs text-neutral-200 bg-neutral-900 px-2 py-1 rounded shadow-sm"
+                className="absolute -translate-x-1/2 -translate-y-6 text-xs text-gray-200 bg-gray-900 px-2 py-1 rounded shadow-sm"
               >
                 {progress}%
               </div>
             </div>
-            <div className="mt-3 text-center text-sm text-neutral-400">
+            <div className="mt-3 text-center text-sm text-gray-400">
               <ElapsedTime
                 startTime={generationStartTime}
                 loading={loading}
               />
-              <div className="text-xs text-neutral-500 mt-1">
+              <div className="text-xs text-gray-500 mt-1">
                 Image will be generated soon — this may take a few moments.
               </div>
             </div>
@@ -113,13 +113,13 @@ const ImageGallery = memo(({
         ) : (
           <div className="w-full">
             <div className="mb-3 border-b border-neutral-800 pb-2">
-              <p className="text-sm font-medium text-neutral-400 text-center">
+              <p className="text-sm font-medium text-gray-400 text-center">
                 No images to display
               </p>
             </div>
-            <div className="text-xs text-neutral-400 text-center">
+            <div className="text-xs text-gray-400 text-center">
               Quick tips: try{' '}
-              <span className="text-neutral-200">
+              <span className="text-gray-200">
                 cinematic portrait, dramatic rim light
               </span>
             </div>
@@ -132,17 +132,17 @@ const ImageGallery = memo(({
   return (
     <div className="col-span-1 sm:col-span-2 p-2">
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-neutral-400 font-medium">
+        <p className="text-sm text-gray-400 font-medium">
           Results: {displayImages.length}
         </p>
       </div>
       
       <div className="mb-2 border-t border-neutral-800 py-2">
-        <p className="text-sm text-neutral-200 truncate">
+        <p className="text-sm text-gray-200 truncate">
           <strong>Prompt:</strong> {displayPrompt}
         </p>
         <div className="flex items-center gap-4 mt-1">
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-gray-400">
             <i className="ri-layout-fill" aria-hidden="true"></i> 
             Aspect Ratio: {displayAspectRatio}
           </p>

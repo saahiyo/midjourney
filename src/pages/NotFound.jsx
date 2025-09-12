@@ -8,7 +8,7 @@ const NotFound = () => {
         <div className="mb-8">
           <h1 className="text-6xl font-bold text-emerald-500 mb-4">404</h1>
           <h2 className="text-2xl font-semibold text-white mb-2">Page Not Found</h2>
-          <p className="text-neutral-400">
+          <p className="text-gray-400">
             Oops! The page you're looking for doesn't exist or you've mistyped the URL.
           </p>
         </div>
@@ -29,7 +29,7 @@ const NotFound = () => {
         </div>
         
         <div className="mt-8 pt-8 border-t border-neutral-800">
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-gray-500">
             Double-check the URL or try one of the links above.
           </p>
         </div>

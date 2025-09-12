@@ -166,7 +166,7 @@ const PromptForm = memo(({
     <section ref={formRef} className="md:col-span-1 bg-neutral-900 p-4 rounded-lg shadow-lg relative z-10">
       <div className="flex">
         <i className="ri-arrow-drop-right-fill" aria-hidden="true"></i>
-        <label className="text-sm text-neutral-400 mb-3 font-medium">
+        <label className="text-sm text-gray-400 mb-3 font-medium">
           Prompt
         </label>
       </div>
@@ -188,20 +188,20 @@ const PromptForm = memo(({
             ref={clearButtonRef}
             onClick={handleClearClick}
             aria-label="Clear prompt"
-            className="absolute right-2 top-2 p-1 text-neutral-400 hover:text-white rounded"
+            className="absolute right-2 top-2 p-1 text-gray-400 hover:text-white rounded"
           >
             <i className="ri-close-line" aria-hidden="true"></i>
           </button>
         )}
       </div>
       
-      <p id="prompt-help" className="text-xs text-neutral-400 mt-2 text-right">
+      <p id="prompt-help" className="text-xs text-gray-400 mt-2 text-right">
         {promptLength}/{maxPromptLength}
       </p>
 
       <div className="mt-6">
         <i className="ri-arrow-drop-right-fill" aria-hidden="true"></i>
-        <label className="text-neutral-400 text-xs font-medium">
+        <label className="text-gray-400 text-xs font-medium">
           Aspect Ratio
         </label>
         

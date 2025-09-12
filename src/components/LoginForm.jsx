@@ -42,12 +42,12 @@ export default function LoginForm() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-neutral-300 mb-2"
+              className="block text-sm font-medium text-gray-300 mb-2"
             >
               Email
             </label>
             <div className="relative">
-              <i className="ri-mail-line absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500"></i>
+              <i className="ri-mail-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
               <input
                 id="email"
                 type="email"
@@ -63,12 +63,12 @@ export default function LoginForm() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-neutral-300 mb-2"
+              className="block text-sm font-medium text-gray-300 mb-2"
             >
               Password
             </label>
             <div className="relative">
-              <i className="ri-lock-password-line absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500"></i>
+              <i className="ri-lock-password-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
@@ -80,7 +80,7 @@ export default function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
               >
                 <i
                   className={
@@ -120,7 +120,7 @@ export default function LoginForm() {
         </form>
 
         {/* Footer */}
-        <div className="mt-6 text-center text-sm text-neutral-400">
+        <div className="mt-6 text-center text-sm text-gray-400">
           Don’t have an account?{" "}
           <Link to="/signup" className="text-emerald-500 hover:text-emerald-400 font-medium">
             Sign up

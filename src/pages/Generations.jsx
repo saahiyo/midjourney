@@ -135,10 +135,10 @@ const EmptyState = React.memo(() => {
 
   return (
     <div ref={emptyRef} className="text-center py-16">
-      <div ref={titleRef} className="text-neutral-500 text-lg mb-2">
+      <div ref={titleRef} className="text-gray-500 text-lg mb-2">
         No generations found
       </div>
-      <p ref={subtitleRef} className="text-neutral-400 text-sm">
+      <p ref={subtitleRef} className="text-gray-400 text-sm">
         Your saved AI generations will appear here
       </p>
     </div>
@@ -220,7 +220,7 @@ const GenerationCard = React.memo(({
         <button
           ref={pollingButtonRef}
           onClick={handlePolling}
-          className="flex-1 px-3 py-1.5 rounded bg-neutral-900 text-xs text-neutral-300 hover:bg-emerald-700 hover:text-white"
+          className="flex-1 px-3 py-1.5 rounded bg-gray-900 text-xs text-gray-300 hover:bg-emerald-700 hover:text-white"
         >
           <i className="ri-link mr-2"></i>
           Open Polling
@@ -331,11 +331,11 @@ const ImagePreview = React.memo(({ generation, src, onClose }) => {
           alt="Preview"
           className="max-w-full max-h-[80vh] object-contain rounded-md"
         />
-        <div className="text-neutral-300 text-xs bg-neutral-800 p-2 rounded-md">
+        <div className="text-gray-300 text-xs bg-gray-800 p-2 rounded-md">
           <p className="font-mono text-sm text-white mb-2">
             {generation.prompt}
           </p>
-          <div className="flex justify-between text-xs text-neutral-400">
+          <div className="flex justify-between text-xs text-gray-400">
             <span>
               {formatDate} at {formatTime}
             </span>
@@ -480,7 +480,7 @@ const Generations = React.memo(function Generations() {
         <div className="w-full mb-6 border-b border-neutral-800 pb-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl text-neutral-400">
+              <h1 className="text-xl text-gray-400">
                 {isAdmin ? "All Generations" : "Saved Generations"}
                 {isAdmin && (
                   <span className="ml-2 px-2 py-1 text-xs bg-purple-900 text-purple-300 rounded-full">
@@ -492,7 +492,7 @@ const Generations = React.memo(function Generations() {
             <button
               ref={backButtonRef}
               onClick={handleBackClick}
-              className="px-4 py-2 text-md text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg"
+              className="px-4 py-2 text-md text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg"
             >
               ← Back
             </button>
@@ -511,7 +511,7 @@ const Generations = React.memo(function Generations() {
             }).length;
             
             return (
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-gray-400">
                 <i className="ri-arrow-right-circle-fill md:mr-2 mr-1"></i>
                 {savedGenerations.length} generation
                 {savedGenerations.length !== 1 ? "s" : ""} total
@@ -553,7 +553,7 @@ const Generations = React.memo(function Generations() {
           <div className="flex flex-col gap-8">
             {groupedGenerations.map(([date, generations]) => (
               <div key={date}>
-                <h2 className="text-lg font-semibold text-neutral-300 mb-4">
+                <h2 className="text-lg font-semibold text-gray-300 mb-4">
                   {date}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

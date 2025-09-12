@@ -94,7 +94,7 @@ const ImagePreviewModal = memo(({ src, onClose }) => {
           <button
             ref={closeButtonRef}
             onClick={handleCloseButtonClick}
-            className="px-3 py-1 text-sm text-neutral-400 hover:text-white"
+            className="px-3 py-1 text-sm text-gray-400 hover:text-white"
             aria-label="Close preview"
           >
             Close

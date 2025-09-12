@@ -12,7 +12,7 @@ export default function Layout() {
       <div className="bg-neutral-950 min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-neutral-300 text-sm tracking-wide animate-pulse">
+          <p className="text-gray-300 text-sm tracking-wide animate-pulse">
             Loading, please wait...
           </p>
         </div>

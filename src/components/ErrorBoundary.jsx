@@ -74,7 +74,7 @@ class ErrorBoundary extends Component {
               </h2>
             </div>
             
-            <p className="text-neutral-300 mb-4">
+            <p className="text-gray-300 mb-4">
               We're sorry, but something unexpected happened. Please try refreshing the page.
             </p>
             
@@ -97,7 +97,7 @@ class ErrorBoundary extends Component {
             
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mt-4 text-xs">
-                <summary className="cursor-pointer text-neutral-400 hover:text-white">
+                <summary className="cursor-pointer text-gray-400 hover:text-white">
                   Error Details (Development)
                 </summary>
                 <pre className="mt-2 p-2 bg-neutral-800 rounded text-red-300 overflow-auto">

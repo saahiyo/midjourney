@@ -138,7 +138,7 @@ const App = () => {
     <ErrorBoundary>
       <Routes>
         <Route
-          path="/"
+          path="/*"
           element={
             <div
               ref={appRef}
@@ -163,7 +163,7 @@ const App = () => {
                 <section className="md:col-span-2 bg-neutral-900 p-6 rounded-xl border border-neutral-800 shadow-lg flex flex-col">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 flex-1 min-h-0">
                     {images.length === 0 ? (
-                      <div className="col-span-1 sm:col-span-2 p-6 flex text-neutral-400 rounded-lg shadow-sm items-center justify-center h-full">
+                      <div className="col-span-1 sm:col-span-2 p-6 flex text-gray-400 rounded-lg shadow-sm items-center justify-center h-full">
                         {loading ? (
                           <div className="w-full relative">
                             <div className="w-full bg-neutral-800 rounded-full h-3 overflow-hidden shadow-inner">
@@ -182,17 +182,17 @@ const App = () => {
                                 style={{
                                   left: `${Math.min(98, Math.max(2, progress))}%`,
                                 }}
-                                className="absolute -translate-x-1/2 -translate-y-6 text-xs text-neutral-200 bg-neutral-900 px-2 py-1 rounded shadow-sm"
+                                className="absolute -translate-x-1/2 -translate-y-6 text-xs text-gray-200 bg-gray-900 px-2 py-1 rounded shadow-sm"
                               >
                                 {progress}%
                               </div>
                             </div>
-                            <div className="mt-3 text-center text-sm text-neutral-400">
+                            <div className="mt-3 text-center text-sm text-gray-400">
                               <ElapsedTime
                                 startTime={generationStartTime}
                                 loading={loading}
                               />
-                              <div className="text-xs text-neutral-500 mt-1">
+                              <div className="text-xs text-gray-500 mt-1">
                                 Image will be generated soon — this may take a
                                 few moments.
                               </div>
@@ -214,14 +214,14 @@ const App = () => {
                         ) : (
                           <div className="w-full">
                             <div className="mb-3 border-b border-neutral-800 pb-2">
-                              <p className="text-sm font-medium text-neutral-400 text-center">
+                              <p className="text-sm font-medium text-gray-400 text-center">
                                 No images to display
                               </p>
                             </div>
                             <ExamplePrompts onTryExample={handleTryExample} />
-                            <div className="mt-4 text-xs text-neutral-400 text-center">
+                            <div className="mt-4 text-xs text-gray-400 text-center">
                               Quick tips: try{" "}
-                              <span className="text-neutral-200">
+                              <span className="text-gray-200">
                                 cinematic portrait, dramatic rim light
                               </span>
                             </div>
