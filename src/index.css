@@ -9,7 +9,7 @@
 	--scrollbar-thumb-hover: rgba(0,0,0,0.5);
 	--scrollbar-width: 12px;
 	--bg-background-color: #070708;
-	--bg-foreground-color: #101011;
+	--bg-for: #f61515;
 }
 
 html {
@@ -24,7 +24,8 @@ body {
 	--font-inter: "Inter", sans-serif;
 	--font-montserrat: "Montserrat", sans-serif;
 	--bg-background-color: var(--bg-background-color);
-	--bg-foreground-color: var(--bg-foreground-color);
+	--bg-red: #fff;
+	--bg-for: var(--bg-for);
 }
 
 

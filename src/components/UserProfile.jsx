@@ -36,7 +36,7 @@ export default function UserProfile() {
         <span className="text-sm text-neutral-300 hidden md:inline">
           {user?.email?.split('@')[0] || 'User'}
         </span>
-        <i className={`ri-arrow-down-s-line text-neutral-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+        <i className={`ri-arrow-down-s-line text-neutral-400 transition-transform hidden sm:inline duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isDropdownOpen && (
