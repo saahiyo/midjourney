@@ -21,7 +21,7 @@ export default function Header({ user, isAdmin, onNav }) {
           <i className="ri-bard-fill text-2xl md:text-3xl text-emerald-500"></i>
           <div className="flex items-center gap-2">
             <button onClick={() => handleNavigate("/")} className="">
-              <h1 className="md:text-4xl text-2xl text-emerald-500 font-semibold tracking-wider">
+              <h1 className="md:text-4xl text-2xl text-emerald-500 font-bold sm:font-semibold tracking-tight sm:tracking-wider">
                 MidJourney
               </h1>
             </button>
