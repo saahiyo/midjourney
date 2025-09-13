@@ -216,7 +216,7 @@ const PromptForm = memo(({
                 handleDropdownButtonClick();
               }
             }}
-            className="w-full p-3 rounded-lg bg-[#171719] text-white border border-[#1d1d20] focus:border-emerald-500 shadow-sm flex items-center justify-between transition-colors"
+            className="w-full p-3 rounded-lg bg-[#171719] text-neutral-300 border border-[#1d1d20] focus:border-emerald-500 shadow-sm flex items-center justify-between transition-colors"
             aria-label="Select aspect ratio"
             aria-expanded={isDropdownOpen}
             aria-haspopup="listbox"
