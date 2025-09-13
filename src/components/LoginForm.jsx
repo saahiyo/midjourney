@@ -8,7 +8,7 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,6 +22,19 @@ export default function LoginForm() {
       navigate("/"); // Redirect to main page
     } catch (error) {
       setError(error.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) throw error;
+      // The user will be redirected by Supabase, no need to navigate here
+    } catch (error) {
+      setError(error.message || "Google sign-in failed");
     } finally {
       setLoading(false);
     }
@@ -119,9 +132,30 @@ export default function LoginForm() {
           </button>
         </form>
 
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-neutral-700"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-[#101011] text-gray-400">Or continue with</span>
+          </div>
+        </div>
+
+        {/* Google Sign In Button */}
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="w-full py-3 px-4 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+        >
+          <i className="ri-google-fill text-xl"></i>
+          Continue with Google
+        </button>
+
         {/* Footer */}
         <div className="mt-6 text-center text-sm text-gray-400">
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
           <Link to="/signup" className="text-emerald-500 hover:text-emerald-400 font-medium">
             Sign up
           </Link>

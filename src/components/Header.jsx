@@ -1,16 +1,26 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import { getAdminDisplayName } from "../utils/admin";
 import UserProfile from "./UserProfile"; // Import UserProfile component
 
 export default function Header({ user, isAdmin, onNav }) {
   const navigate = useNavigate();
+  const { signInWithGoogle } = useAuth();
 
   const handleNavigate = (path) => {
     if (onNav) {
       onNav(path);
     } else {
       navigate(path);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Google sign-in error:', error);
     }
   };
 
@@ -32,16 +42,23 @@ export default function Header({ user, isAdmin, onNav }) {
             )}
           </div>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center gap-3">
           {!user ? (
             <>
               <button
                 onClick={() => handleNavigate("/login")}
-                className="px-4 py-2 rounded-full text-white text-sm shadow-sm cursor-pointer flex items-center justify-center bg-foreground-color hover:bg-[#3a3b40] "
+                className="pl-2 py-2 rounded-full text-white text-sm shadow-sm cursor-pointer flex items-center justify-center bg-foreground-color hover:bg-[#3a3b40] "
               >
                 <span className="block md:hidden">login</span>
                 <span className="hidden md:inline">Sign In</span>
                 <i class="ri-login-circle-line ml-2"></i>
+              </button>
+              <button
+                onClick={handleGoogleSignIn}
+                className="px-4 py-1 rounded-full bg-white text-gray-900 text-sm shadow-sm cursor-pointer flex items-center justify-center hover:bg-gray-100 transition-colors"
+              >
+                <i className="ri-google-fill text-lg"></i>
+                <span className=" ml-2">Google</span>
               </button>
             </>
           ) : (
