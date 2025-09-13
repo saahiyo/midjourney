@@ -7,7 +7,7 @@ const variantStyles = {
   success: "bg-emerald-700 border-emerald-500 text-white",
   error: "bg-red-700 border-red-500 text-white",
   warning: "bg-yellow-600 border-yellow-400 text-black",
-  info: "bg-neutral-900 border-neutral-600 text-white",
+  info: "bg-[#101011] border-neutral-600 text-white",
 };
 
 export default function Toast({

@@ -122,7 +122,7 @@ export default function ConfirmationModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className="relative w-full max-w-sm rounded-2xl bg-neutral-900/90 p-6 shadow-2xl ring-1 ring-white/10"
+        className="relative w-full max-w-sm rounded-2xl bg-[#101011]/90 p-6 shadow-2xl ring-1 ring-white/10"
       >
         <button
           type="button"

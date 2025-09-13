@@ -43,7 +43,7 @@ const ExamplePrompts = memo(({ onTryExample }) => {
           ref={el => buttonRefs.current[i] = el}
           onClick={() => handleButtonClick(example, i)}
           title={example}
-          className="text-xs truncate max-w-xs px-2 py-1 rounded-full bg-gray-800 text-gray-200 hover:bg-gray-700"
+          className="text-xs truncate max-w-xs px-2 py-1 rounded-full bg-neutral-900 text-gray-400 border border-[#1d1d20] hover:bg-neutral-800"
           aria-label={`Try example prompt: ${example}`}
         >
           <i className="ri-arrow-right-up-long-line mr-2" aria-hidden="true"></i>

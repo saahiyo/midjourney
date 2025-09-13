@@ -52,7 +52,7 @@ export default function UserProfile() {
         </button>
 
         {isDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-neutral-900 rounded-lg shadow-lg border border-neutral-800 z-50 animate-fadeIn">
+          <div className="absolute right-0 mt-2 w-48 bg-[#101011] rounded-lg shadow-lg border border-neutral-800 z-50 animate-fadeIn">
             <div className="p-4 border-b border-neutral-800">
               <p className="text-sm font-medium text-gray-300">
                 {user?.email?.split('@')[0]}

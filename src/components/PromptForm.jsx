@@ -163,7 +163,7 @@ const PromptForm = memo(({
   };
 
   return (
-    <section ref={formRef} className="md:col-span-1 bg-neutral-900 p-4 rounded-lg shadow-lg relative z-10">
+    <section ref={formRef} className="md:col-span-1 bg-[#101011] border border-[#1d1d20] p-4 rounded-lg shadow-lg relative z-10">
       <div className="flex">
         <i className="ri-arrow-drop-right-fill" aria-hidden="true"></i>
         <label className="text-sm text-gray-400 mb-3 font-medium">
@@ -179,7 +179,7 @@ const PromptForm = memo(({
           placeholder="Describe your vision..."
           rows={6}
           maxLength={maxPromptLength}
-          className="w-full p-2 rounded-lg bg-neutral-800 text-white border border-neutral-700 focus:outline-none focus:ring-1 focus:ring-emerald-800"
+          className="w-full p-2 rounded-lg bg-[#171719] text-white border border-[#1d1d20] focus:outline-none focus:ring-1 focus:ring-emerald-800"
           aria-label="Image generation prompt"
           aria-describedby="prompt-help"
         />
@@ -216,7 +216,7 @@ const PromptForm = memo(({
                 handleDropdownButtonClick();
               }
             }}
-            className="w-full p-3 rounded-lg bg-neutral-800 text-white border border-neutral-700 hover:border-emerald-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm flex items-center justify-between transition-colors"
+            className="w-full p-3 rounded-lg bg-[#171719] text-white border border-[#1d1d20] focus:border-emerald-500 shadow-sm flex items-center justify-between transition-colors"
             aria-label="Select aspect ratio"
             aria-expanded={isDropdownOpen}
             aria-haspopup="listbox"

@@ -160,7 +160,7 @@ const App = () => {
                   onClear={handleClearAll}
                 />
 
-                <section className="md:col-span-2 bg-neutral-900 p-6 rounded-xl border border-neutral-800 shadow-lg flex flex-col">
+                <section className="md:col-span-2 bg-[#101011] p-6 rounded-xl border border-[#1d1d20] shadow-lg flex flex-col">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 flex-1 min-h-0">
                     {images.length === 0 ? (
                       <div className="col-span-1 sm:col-span-2 p-6 flex text-gray-400 rounded-lg shadow-sm items-center justify-center h-full">

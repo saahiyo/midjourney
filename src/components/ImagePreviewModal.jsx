@@ -82,7 +82,7 @@ const ImagePreviewModal = memo(({ src, onClose }) => {
     >
       <div 
         ref={contentRef}
-        className="bg-neutral-900 rounded-xl p-3 max-w-[95vw] max-h-[90vh] overflow-auto"
+        className="bg-[#101011] rounded-xl p-3 max-w-[95vw] max-h-[90vh] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <img

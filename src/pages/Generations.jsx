@@ -323,7 +323,7 @@ const ImagePreview = React.memo(({ generation, src, onClose }) => {
     >
       <div
         ref={contentRef}
-        className="bg-neutral-900 rounded-lg p-2 shadow-2xl border border-emerald-700/50 max-w-3xl w-full flex flex-col gap-2"
+        className="bg-[#101011] rounded-lg p-2 shadow-2xl border border-emerald-700/50 max-w-3xl w-full flex flex-col gap-2"
         onClick={(e) => e.stopPropagation()}
       >
         <img

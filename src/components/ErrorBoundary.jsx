@@ -66,7 +66,7 @@ class ErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center p-4">
-          <div ref={this.errorContainerRef} className="max-w-md w-full bg-neutral-900 rounded-lg p-6 shadow-lg border border-red-500/20">
+          <div ref={this.errorContainerRef} className="max-w-md w-full bg-[#101011] rounded-lg p-6 shadow-lg border border-red-500/20">
             <div className="flex items-center gap-3 mb-4">
               <i className="ri-error-warning-line text-red-400 text-2xl" aria-hidden="true"></i>
               <h2 className="text-lg font-semibold text-red-400">
