@@ -57,12 +57,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signInWithGoogle = async () => {
+    const redirectUrl = import.meta.env.VITE_PUBLIC_SITE_URL || window.location.origin;
+    console.log('Google OAuth redirect URL:', redirectUrl);
+    console.log('VITE_PUBLIC_SITE_URL:', import.meta.env.VITE_PUBLIC_SITE_URL);
+    console.log('Window location origin:', window.location.origin);
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: import.meta.env.VITE_PUBLIC_SITE_URL || window.location.origin,
+        redirectTo: redirectUrl,
       },
     });
+    
+    console.log('Google sign-in response:', { data, error });
     return { data, error };
   };
 
