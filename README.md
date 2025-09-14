@@ -1,181 +1,100 @@
-# MidJourney Image Generation App
+# AI Image Generator
 
-A modern, responsive React application for generating AI images using the MidJourney API. Features a sleek dark theme interface, real-time progress tracking, and comprehensive error handling.
+A modern React application for AI image generation using Supabase Edge Functions, featuring real-time progress tracking and Google OAuth authentication.
 
-## ✨ Features
+## Features
 
-- **AI Image Generation**: Generate stunning images using MidJourney API
-- **Real-time Progress**: Live progress tracking with polling mechanism
-- **Responsive Design**: Optimized for desktop and mobile devices
-- **Error Handling**: Comprehensive error boundaries and user-friendly messages
-- **Accessibility**: Full ARIA support and keyboard navigation
-- **Performance**: Optimized with React.memo, useMemo, and useCallback
-- **Type Safety**: Input validation and sanitization
-- **Database Integration**: Supabase for saving generation history
+- 🤖 AI image generation with real-time progress tracking
+- 🔐 Google OAuth authentication via Supabase
+- 📱 Responsive design with Tailwind CSS
+- 🎨 Modern dark theme interface
+- ⚡ Fast Vite build tooling
+- 🔄 Real-time status polling
+- 📊 Generation history tracking
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ 
-- npm or yarn
-- Supabase account (optional, for saving generations)
+- Node.js 18+
+- npm
+- Supabase account with Edge Functions enabled
 
-### Installation
+### Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd midjourney
-   ```
-
-2. **Install dependencies**
+1. **Install dependencies**
    ```bash
    npm install
    ```
 
-3. **Set up environment variables**
-   Create a `.env.local` file in the root directory:
-   ```env
-   VITE_MJ_API_URL=your_midjourney_api_url
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+2. **Configure environment**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Edit `.env.local` with your values:
+   ```
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_anon_key
+   VITE_MJ_API_URL=your_image_generation_service_url  # Used by Supabase Edge Function
+   VITE_ADMIN_EMAIL=your_admin_email
+   VITE_PUBLIC_SITE_URL=http://localhost:5173
    ```
 
-4. **Start the development server**
+3. **Set up Supabase Edge Function**
+   Deploy the `mj-gen-images` Edge Function to your Supabase project. The function should handle the image generation API calls.
+
+4. **Start development**
    ```bash
    npm run dev
    ```
 
-5. **Open your browser**
-   Navigate to `http://localhost:5173`
+5. **Build for production**
+   ```bash
+   npm run build
+   ```
 
-## 🛠️ Available Scripts
+## Tech Stack
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
+- **Frontend**: React 19, Vite, Tailwind CSS 4
+- **Backend**: Supabase (Database + Edge Functions)
+- **Authentication**: Supabase Auth (Google OAuth)
+- **Styling**: Tailwind CSS
+- **Animation**: GSAP
+- **Icons**: Lucide React
+- **State Management**: React hooks (custom hooks pattern)
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 src/
-├── components/          # Reusable UI components
-│   ├── ErrorBoundary.jsx
-│   ├── ImageGallery.jsx
-│   ├── ImagePreviewModal.jsx
-│   ├── PromptForm.jsx
-│   └── ...
-├── hooks/              # Custom React hooks
-│   ├── useImageGeneration.js
-│   ├── usePromptForm.js
-│   └── useImagePreview.js
-├── utils/              # Utility functions
-│   ├── constants.js
-│   ├── errorHandler.js
-│   └── validation.js
-├── constants/          # Application constants
-├── lib/               # External library configurations
+├── components/     # React components
+├── hooks/         # Custom React hooks
+├── pages/         # Route pages
+├── lib/          # External library configs
+├── utils/        # Utility functions
+├── constants/    # App constants
+└── assets/       # Static assets
 ```
 
-## 🎨 Key Components
+## Key Features
 
-### Custom Hooks
+- **AI Image Generation**: Uses Supabase Edge Functions to generate images
+- **Real-time Progress**: Tracks generation progress with polling
+- **User Authentication**: Google OAuth integration for secure access
+- **Generation History**: Track and view past generations
+- **Responsive Design**: Works seamlessly on desktop and mobile
 
-- **`useImageGeneration`**: Manages image generation state and API calls
-- **`usePromptForm`**: Handles form state and validation
-- **`useImagePreview`**: Manages image preview modal state
-
-### Components
-
-- **`PromptForm`**: Input form with validation and aspect ratio selection
-- **`ImageGallery`**: Displays generated images with responsive layout
-- **`ErrorBoundary`**: Catches and handles React errors gracefully
-- **`ImagePreviewModal`**: Full-screen image preview with keyboard support
-
-## 🔧 Configuration
-
-### Environment Variables
+## Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `VITE_MJ_API_URL` | MidJourney API endpoint | Yes |
-| `VITE_SUPABASE_URL` | Supabase project URL | No |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key | No |
+| `VITE_SUPABASE_URL` | Your Supabase project URL | Yes |
+| `VITE_SUPABASE_ANON_KEY` | Your Supabase anon key | Yes |
+| `VITE_MJ_API_URL` | Image generation service URL for Edge Function | Yes |
+| `VITE_ADMIN_EMAIL` | Admin email for special permissions | Yes |
+| `VITE_PUBLIC_SITE_URL` | Your site's public URL | Yes |
 
-### API Configuration
+## License
 
-The app expects the MidJourney API to support:
-- GET requests with `prompt` and `usePolling` parameters
-- Polling mechanism for long-running generations
-- JSON responses with `status`, `results`, and `pollingUrl` fields
-
-
-## 🚀 Performance Optimizations
-
-- **React.memo**: Prevents unnecessary re-renders
-- **useMemo/useCallback**: Optimizes expensive calculations
-- **Lazy loading**: Images load only when needed
-- **Debounced inputs**: Reduces API calls
-- **Error boundaries**: Prevents app crashes
-
-## ♿ Accessibility Features
-
-- **ARIA labels**: Screen reader support
-- **Keyboard navigation**: Full keyboard accessibility
-- **Focus management**: Proper focus handling in modals
-- **Color contrast**: WCAG compliant color scheme
-- **Semantic HTML**: Proper HTML structure
-
-## 🔒 Security Features
-
-- **Input sanitization**: Prevents XSS attacks
-- **Validation**: Client-side input validation
-- **Error handling**: Secure error messages
-- **Environment validation**: Checks for required variables
-
-## 📱 Responsive Design
-
-- **Mobile-first**: Optimized for mobile devices
-- **Flexible layouts**: Adapts to different screen sizes
-- **Touch-friendly**: Large touch targets
-- **Progressive enhancement**: Works without JavaScript
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Make sure your changes work correctly
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🆘 Troubleshooting
-
-### Common Issues
-
-1. **API Connection Failed**
-   - Check your `VITE_MJ_API_URL` environment variable
-   - Verify the API endpoint is accessible
-
-2. **Supabase Connection Issues**
-   - Ensure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set
-   - Check your Supabase project settings
-
-3. **Build Errors**
-   - Clear node_modules and reinstall: `rm -rf node_modules && npm install`
-   - Check for TypeScript errors: `npm run lint`
-
-### Getting Help
-
-- Check the [Issues](https://github.com/your-repo/issues) page
-- Review the [Documentation](https://your-docs-url.com)
-- Contact the maintainers
-
----
-
-Built with ❤️ using React, Vite, and Tailwind CSS
+MIT
