@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { getAdminDisplayName } from "../utils/admin";
 import UserProfile from "./UserProfile"; // Import UserProfile component
+import GoogleLogo from "./GoogleLogo"; // Import GoogleLogo component
 
 export default function Header({ user, isAdmin, onNav }) {
   const navigate = useNavigate();
@@ -47,18 +48,18 @@ export default function Header({ user, isAdmin, onNav }) {
             <>
               <button
                 onClick={() => handleNavigate("/login")}
-                className="pl-2 py-2 rounded-full text-white text-sm shadow-sm cursor-pointer flex items-center justify-center bg-foreground-color hover:bg-[#3a3b40] "
+                className=" pr-2 sm:py-2 px-4 rounded-full text-white text-sm shadow-sm cursor-pointer flex items-center justify-center bg-foreground-color hover:bg-[#3a3b40] "
               >
-                <span className="block md:hidden">login</span>
-                <span className="hidden md:inline">Sign In</span>
+                <span className="block md:hidden pb-0.5">login</span>
+                <span className="hidden md:inline pb-0.5">Sign In</span>
                 <i class="ri-login-circle-line ml-2"></i>
               </button>
               <button
                 onClick={handleGoogleSignIn}
                 className="px-4 py-1 rounded-full bg-white text-gray-900 text-sm shadow-sm cursor-pointer flex items-center justify-center hover:bg-gray-100 transition-colors"
               >
-                <i className="ri-google-fill text-lg"></i>
-                <span className=" ml-2">Google</span>
+                <GoogleLogo className="w-4 h-4" />
+                <span className=" ml-2 pb-0.5">Google</span>
               </button>
             </>
           ) : (

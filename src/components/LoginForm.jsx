@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../hooks/useAuth.jsx";
 import { Link, useNavigate } from "react-router-dom";
+import GoogleLogo from "./GoogleLogo";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -41,7 +42,7 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="fixed inset-0 bg-neutral-950 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
       <div className="bg-[#101011] rounded-2xl shadow-xl p-8 w-full max-w-md">
         {/* Header */}
         <div className="flex items-center gap-2 text-emerald-500 mb-8 text-2xl">
@@ -147,9 +148,10 @@ export default function LoginForm() {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full py-3 px-4 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          className="w-full py-3 px-4 bg-white text-gray-900 rounded-lg font-medium hover:bg-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center justify-center gap-2"
         >
-          <i className="ri-google-fill text-xl"></i>
+          {/* <i className="ri-google-fill text-xl"></i> */}
+          <GoogleLogo className="w-4 h-4" />
           Continue with Google
         </button>
 

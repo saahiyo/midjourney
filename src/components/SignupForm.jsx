@@ -41,7 +41,7 @@ export default function SignupForm({ onSignupSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-neutral-950 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
       <div className="bg-[#101011] rounded-2xl shadow-xl p-8 w-full max-w-md">
         {/* Header */}
         <div className="flex items-center gap-2 text-emerald-500 mb-8 text-2xl">

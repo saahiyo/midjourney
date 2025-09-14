@@ -11,11 +11,13 @@ import Signup from './pages/Signup'
 import NotFound from './pages/NotFound'
 import AuthGuard from './components/AuthGuard'
 import RouteAuthGuard from './components/RouteAuthGuard'
+import PatternSelector from './components/PatternSelector'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
+        <PatternSelector />
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<App />} />
