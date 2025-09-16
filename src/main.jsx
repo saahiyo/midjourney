@@ -12,33 +12,36 @@ import NotFound from './pages/NotFound'
 import AuthGuard from './components/AuthGuard'
 import RouteAuthGuard from './components/RouteAuthGuard'
 import PatternSelector from './components/PatternSelector'
+import PageTransitionProvider from './components/PageTransitionProvider.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
-        <PatternSelector />
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<App />} />
-            <Route path="generations" element={
-              <RouteAuthGuard>
-                <Generations />
-              </RouteAuthGuard>
+        <PageTransitionProvider>
+          <PatternSelector />
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<App />} />
+              <Route path="generations" element={
+                <RouteAuthGuard>
+                  <Generations />
+                </RouteAuthGuard>
+              } />
+            </Route>
+            <Route path="/login" element={
+              <AuthGuard>
+                <LoginForm />
+              </AuthGuard>
             } />
-          </Route>
-          <Route path="/login" element={
-            <AuthGuard>
-              <LoginForm />
-            </AuthGuard>
-          } />
-          <Route path="/signup" element={
-            <AuthGuard>
-              <Signup />
-            </AuthGuard>
-          } />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="/signup" element={
+              <AuthGuard>
+                <Signup />
+              </AuthGuard>
+            } />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </PageTransitionProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
