@@ -522,8 +522,8 @@ const Generations = React.memo(function Generations() {
                 today
                 {isAdmin && (
                   <>
-                    <i className="ri-arrow-right-long-line md:mx-2 mx-1"></i>
-                    <span className="text-purple-400">Admin View</span>
+                    <i className="ri-arrow-right-long-line md:mx-2 mx-1 hidden sm:inline"></i>
+                    <span className="text-purple-400 hidden sm:inline">Admin View</span>
                   </>
                 )}
               </p>
